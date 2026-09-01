@@ -85,4 +85,4 @@ Xcode 打开 `Variations/Variations.xcodeproj` 跑模拟器；Debug 构建默认
 
 生产形态：本地交叉编译 linux/amd64 静态二进制 → 上传阿里云 ECS → systemd 拉起（无 Docker），nginx 反代 `variations.ifable.cn`。一键发版：`./variations-serve-go/deploy/deploy.sh user@host`。完整手册见 [DEPLOY-GO.md](./variations-serve-go/DEPLOY-GO.md)。
 
-客户端经 App Store 分发：Debug = 开发环境（地址可在设置页覆盖），Release = 正式环境（构建期注入地址，设置页只读）。
+客户端经 App Store 分发：Debug = 开发环境（地址可在设置页覆盖），Release = 正式环境（构建期注入地址，设置页只读）。内测经 [TestFlight](https://testflight.apple.com/join/4fkRqczs) 加入（Release 配置，连正式环境）。

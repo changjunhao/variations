@@ -5,6 +5,8 @@
 账号体系为 Sign in with Apple（游客可先体验），配额三态（游客体验 / 新用户特权 / IAP 已购余额）+ StoreKit 2 积分包，
 首次启动有隐私同意闸门（中国区合规）。
 
+内测版经 [TestFlight](https://testflight.apple.com/join/4fkRqczs) 分发（Release 配置，连正式环境）。
+
 ## 联调步骤
 
 1. 起后端（同仓库 `variations-serve-go/`，Go 版为唯一服务端）：
