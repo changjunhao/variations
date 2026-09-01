@@ -1,0 +1,4 @@
+interface:
+  display_name: "City Ink Poster"
+  short_description: "A Wu Guanzhong-inspired modern ink city travel poster: black-white-gray landmark composition, large negative space, dot-line-plane rhythm and a bilingual caption block, on a canvas that preserves the source photo's exact aspect ratio."
+  default_prompt: "Use $city-ink-poster to turn this photo into a Wu Guanzhong-inspired modern ink city travel poster that follows the source photo's exact aspect ratio: black-white-gray ink landmarks, large negative space, dot-line-plane rhythm, tiny color accents, and an elegant bilingual city caption."

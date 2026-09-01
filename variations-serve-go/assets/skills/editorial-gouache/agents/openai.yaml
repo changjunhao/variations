@@ -1,0 +1,4 @@
+interface:
+  display_name: "Editorial Gouache"
+  short_description: "Turn photos into open-edged editorial paintings"
+  default_prompt: "Use $editorial-gouache to reinterpret my photo as a recognizable watercolor-and-gouache editorial illustration with decisive shapes, limited color, and natural paper white around an irregular open painted edge."

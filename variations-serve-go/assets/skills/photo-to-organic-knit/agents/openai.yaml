@@ -1,0 +1,4 @@
+interface:
+  display_name: "Photo to Organic Knit"
+  short_description: "Reimagine photos as conceptual knitted art posters"
+  default_prompt: "Use $photo-to-organic-knit to reinterpret this photo as a bold conceptual knitted-wool art poster."

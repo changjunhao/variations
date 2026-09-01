@@ -1,0 +1,4 @@
+interface:
+  display_name: "Photo Ink Study"
+  short_description: "The untouched photo beside or above a flat ink-wash deconstruction of the whole scene, with a fine serif title on a matte ivory postcard."
+  default_prompt: "Use $photo-ink-study to turn this photo into a matte warm-ivory album postcard in a strict 1:1 two-part composition that follows the source orientation — stacked for landscape, side-by-side for portrait: the untouched original photo in one region, a flat ink-wash geometric deconstruction of the entire scene on the adjoining beige panel, and one hairline serif title at the bottom of the panel."

@@ -1,0 +1,10 @@
+// Debug.xcconfig
+// Variations
+//
+// Debug 构建 = 开发环境。环境标识经 Info.plist 的 $(APP_ENVIRONMENT) 注入，
+// 由 AppConfiguration 解析；基地址映射在 AppConfiguration.swift，勿在此写 URL
+// （xcconfig 中 // 会被当作注释截断值）。
+
+#include "Common.xcconfig"
+
+APP_ENVIRONMENT = dev

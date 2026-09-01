@@ -1,0 +1,8 @@
+// Common.xcconfig
+// Variations
+//
+// 各构建配置共享的自定义 setting。
+
+// 私有密钥（不入库；缺失时可选引入不报错，RegisterSecret 注入为空串，
+// DeviceAuth 注册时 fail-safe；格式见 Secrets.xcconfig.example）
+#include? "Secrets.xcconfig"

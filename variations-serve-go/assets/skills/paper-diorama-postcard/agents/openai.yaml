@@ -1,0 +1,4 @@
+interface:
+  display_name: "Paper Diorama Postcard"
+  short_description: "Turn a travel photo into a vintage postcard with a 3D paper-cut diorama rising from it."
+  default_prompt: "Use $paper-diorama-postcard to turn this travel photo into a vintage postcard with an intricate paper-cut diorama world emerging from it."

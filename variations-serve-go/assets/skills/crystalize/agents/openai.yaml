@@ -1,0 +1,4 @@
+interface:
+  display_name: "Crystalize"
+  short_description: "Turn photos into crystalline paper illustrations"
+  default_prompt: "Use $crystalize to recompose this photo in its original orientation as a distinctive editorial crystal illustration with natural optical depth, varied facets, crisp edges, and a small grounded title."

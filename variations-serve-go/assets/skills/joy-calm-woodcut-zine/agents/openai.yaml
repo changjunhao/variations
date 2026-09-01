@@ -1,0 +1,4 @@
+interface:
+  display_name: "Joy Calm Woodcut Zine"
+  short_description: "把照片转译为静谧的当代彩色版画 zine 海报"
+  default_prompt: "Use $joy-calm-woodcut-zine to turn this photo into a calm, scene-aware woodcut zine poster."

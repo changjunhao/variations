@@ -1,0 +1,4 @@
+interface:
+  display_name: "Scenic Postcard Editorial"
+  short_description: "Turn a travel photo into a photo-and-gouache minimal postcard poster."
+  default_prompt: "Use $scenic-postcard-editorial to turn this travel photo into a minimal editorial postcard poster."

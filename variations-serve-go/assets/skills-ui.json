@@ -1,0 +1,332 @@
+{
+  "gc-minimal-zine-poster": {
+    "manual": {
+      "displayName": "极简纸感 · Minimal Zine",
+      "shortDescription": "把主题或参照物变成大留白、单色点睛的诗意纸感海报",
+      "defaultPrompt": "Use $gc-minimal-zine-poster to turn this theme or reference set into a sparse paper-texture editorial poster.",
+      "size": "3:5",
+      "instructionTemplate": [
+        { "label": "主题", "placeholder": "如：深夜电台、山间邮局" },
+        { "label": "海报文案", "placeholder": "一句短文案，留空则不加" }
+      ]
+    }
+  },
+  "photo-abstract-editorial": {
+    "manual": {
+      "displayName": "影像抽象 · Abstract Editorial",
+      "shortDescription": "照片与暖象牙色版面横竖相依，抽象笔迹与英文衬线标题的编集海报",
+      "defaultPrompt": "Use $photo-abstract-editorial to turn this photograph into a photo-and-abstract editorial composition.",
+      "size": "x2",
+      "instructionTemplate": [
+        { "label": "标题文字", "placeholder": "英文 2-5 个词，留空则自动起题" },
+        { "label": "母题偏好", "placeholder": "如：圆弧、水平线、枯枝" },
+        { "label": "对齐", "options": ["左对齐", "居中", "右对齐"] }
+      ]
+    }
+  },
+  "photo-relic-editorial": {
+    "manual": {
+      "displayName": "拾影 · Photo Relic",
+      "shortDescription": "真实照片原样保留，与抽象拾影记忆印痕横竖相依的东方克制艺术海报",
+      "defaultPrompt": "Use $photo-relic-editorial to turn this photo into a Photo Relic artwork with a truthful photo region and a recognizable abstract memory print.",
+      "size": "x2",
+      "instructionTemplate": [
+        { "label": "标题语言", "options": ["英文", "中文", "双语", "无字"] },
+        { "label": "标题文字", "placeholder": "留空则自动起题" },
+        { "label": "强调色", "options": ["朱红", "金", "暮橙"] }
+      ]
+    }
+  },
+  "photo-ink-echo": {
+    "manual": {
+      "displayName": "淡彩回响 · Ink Echo",
+      "shortDescription": "原照片原样保留，与一枚极小的水彩记忆母题横竖相依的安静编集作品",
+      "defaultPrompt": "Use $photo-ink-echo to turn this photo into a restrained editorial diptych that follows the source orientation, with the untouched photo and a very small watercolor memory motif on a warm-ivory panel.",
+      "size": "x2",
+      "instructionTemplate": [
+        { "label": "标题语言", "options": ["英文", "中文", "无字"] },
+        { "label": "标题文字", "placeholder": "英文 2-5 个词，留空则自动起题" }
+      ]
+    }
+  },
+  "photo-ink-study": {
+    "manual": {
+      "displayName": "水墨解构 · Ink Study",
+      "shortDescription": "原照片原样保留，与水墨扁平解构的全场景插画横竖相依，衬线标题落款的米白画册明信片",
+      "defaultPrompt": "Use $photo-ink-study to turn this photo into a matte warm-ivory album postcard that follows the source orientation: the untouched photo in one region, a flat ink-wash deconstruction of the whole scene on the adjoining beige panel, and a fine serif title at the panel's bottom.",
+      "size": "x2",
+      "instructionTemplate": [
+        { "label": "标题语言", "options": ["英文", "中文", "双语", "无字"] },
+        { "label": "标题文字", "placeholder": "英文 2-4 个词，留空则自动起题" }
+      ]
+    }
+  },
+  "photo-ink-poster": {
+    "manual": {
+      "displayName": "水墨海报 · Ink Poster",
+      "shortDescription": "照片主体保持可辨认，边缘以水墨晕染溶解进大面积留白纸面的当代编集海报",
+      "defaultPrompt": "Use $photo-ink-poster to turn this photo into a quiet, spacious contemporary ink-wash editorial poster on a fixed vertical 4:5 canvas: the recognizable subject preserved as an integrated image field with ink-dissolved edges, a deliberate low-chroma paper tone, generous quiet negative space, and restrained microtype only when it improves the composition.",
+      "size": "1024*1280",
+      "instructionTemplate": [
+        { "label": "风格模式", "options": ["传统水墨"] },
+        { "label": "画面文字", "options": ["无字"] },
+        { "label": "文字内容", "placeholder": "确切上画文字，留空则由构图决定" }
+      ]
+    }
+  },
+  "photo-essence-strata": {
+    "manual": {
+      "displayName": "本质地层 · Essence Strata",
+      "shortDescription": "把照片垂直挖掘为三层地层：顶部原照片现实、中段水彩记忆与衬线标题、底部几何本质与档案编号",
+      "defaultPrompt": "Use $photo-essence-strata to turn this photo into a fixed portrait 3:5 archival plate of three strata: the untouched photo band on top, a soft watercolor recollection with one elegant serif title in the middle, and an archetypal geometric essence with a small archive line at the bottom.",
+      "size": "960*1600",
+      "instructionTemplate": [
+        { "label": "标题语言", "options": ["英文", "中文", "双语", "无字"] },
+        { "label": "标题文字", "placeholder": "英文 2-4 个词，留空则自动起题" },
+        { "label": "档案行", "options": ["隐藏"] }
+      ]
+    }
+  },
+  "scenic-postcard-editorial": {
+    "manual": {
+      "displayName": "旅途风景 · Scenic Postcard",
+      "shortDescription": "把去过的城市与风景，变成照片与水粉插画横竖相伴的诗意艺术明信片",
+      "defaultPrompt": "Use $scenic-postcard-editorial to turn this travel photo into a minimal editorial postcard poster.",
+      "size": "x2",
+      "instructionTemplate": [
+        { "label": "标题文字", "placeholder": "英文 2-5 个词，留空则自动起题" },
+        { "label": "副标题", "placeholder": "英文 3-7 个词，留空则自动生成" },
+        { "label": "色调", "placeholder": "如：暖黄、蓝灰" }
+      ]
+    }
+  },
+  "paper-diorama-postcard": {
+    "manual": {
+      "displayName": "纸雕秘境 · Paper Diorama",
+      "shortDescription": "把旅行照变为复古明信片上浮出的 3D 纸雕微缩世界，收藏级旅人立于其间",
+      "defaultPrompt": "Use $paper-diorama-postcard to turn this travel photo into a vintage postcard with an intricate paper-cut diorama world emerging from it.",
+      "size": "1280*1280",
+      "instructionTemplate": [
+        { "label": "手写寄语", "placeholder": "一句简短寄语，留空则自动生成" },
+        { "label": "人物", "options": ["关闭"] }
+      ]
+    }
+  },
+  "scene-distillation-zine": {
+    "manual": {
+      "displayName": "影像蒸馏 · Scene Distillation",
+      "shortDescription": "把照片蒸馏为文字完全自由、表达优先的艺术纸刊插画作品",
+      "defaultPrompt": "Use $scene-distillation-zine to transform this photo into an expressive zine illustration with unrestricted authorial typography.",
+      "size": "3:5",
+      "instructionTemplate": [
+        { "label": "表达主张", "placeholder": "想传达的情绪或概念" },
+        { "label": "画面文字", "placeholder": "想出现在画面里的文字" },
+        { "label": "单色块模式", "options": ["开启"] }
+      ]
+    }
+  },
+  "scenes-gathered-zine": {
+    "manual": {
+      "displayName": "实景拼贴 · Gathered Scenes",
+      "shortDescription": "以简化插画、结构性色彩和手撕纤维边缘重组真实照片的纸像海报工具",
+      "defaultPrompt": "Use $scenes-gathered-zine to transform this photo into a source-faithful paper poster with simplified abstract forms, integrated chromatic structure, and a visible hand-torn fibrous edge.",
+      "size": "3:5",
+      "instructionTemplate": [
+        { "label": "文字语言", "options": ["英文", "中文", "中英双语"] },
+        { "label": "画面文字", "placeholder": "中文≤8字 / 英文≤5词" },
+        { "label": "记录信息", "placeholder": "如日期、坐标，留空则不加" }
+      ]
+    }
+  },
+  "pixel-style-poster-skill": {
+    "manual": {
+      "displayName": "像素点阵 · Pixel Poster",
+      "shortDescription": "把主题或照片变成精细点阵、克制排版的 3:4 编辑感位图海报",
+      "defaultPrompt": "Use $pixel-style-poster-skill to turn this theme or photo into a fine dot-matrix editorial poster.",
+      "size": "3:4",
+      "instructionTemplate": [
+        { "label": "主题", "placeholder": "如：薄荷绿主题的百合花" },
+        { "label": "标题文字", "placeholder": "提供标题则转大标题版式" },
+        { "label": "排版", "options": ["大标题", "小字落款", "日记感"] },
+        { "label": "色彩倾向", "placeholder": "如：薄荷绿、蓝绿双色" }
+      ]
+    }
+  },
+  "editorial-gouache": {
+    "manual": {
+      "displayName": "编集水粉 · Editorial Gouache",
+      "shortDescription": "把照片转写为 3-5 色、开放边缘的手绘水粉编集插画",
+      "defaultPrompt": "Use $editorial-gouache to reinterpret my photo as a recognizable watercolor-and-gouache editorial illustration with decisive shapes, limited color, and natural paper white around an irregular open painted edge.",
+      "size": "3:5"
+    }
+  },
+  "minecraft-world": {
+    "manual": {
+      "displayName": "方块世界 · Minecraft World",
+      "shortDescription": "把照片重建为可居、电影感的方块游戏世界场景",
+      "defaultPrompt": "Use $minecraft-world to reimagine this photo as a coherent cinematic game-world screenshot.",
+      "size": "3:5",
+      "instructionTemplate": [
+        { "label": "时间光线", "placeholder": "如：黄昏、雪夜；默认跟随照片" },
+        { "label": "色调", "placeholder": "默认跟随照片主色" }
+      ]
+    }
+  },
+  "crystalize": {
+    "manual": {
+      "displayName": "晶析 · Crystalize",
+      "shortDescription": "把风景照重绘为暖调半透明晶体质感的极简插画",
+      "defaultPrompt": "Use $crystalize to recompose this photo in its original orientation as a distinctive editorial crystal illustration with natural optical depth, varied facets, crisp edges, and a small grounded title.",
+      "size": "3:5",
+      "instructionTemplate": [
+        { "label": "标题文字", "placeholder": "极短英文标题，留空则自动起题" },
+        { "label": "底色", "options": ["暖米纸面", "深色底"] }
+      ]
+    }
+  },
+  "photo-to-organic-knit": {
+    "manual": {
+      "displayName": "毛线编织 · Organic Knit",
+      "shortDescription": "把照片重构为概念驱动的毛线编织艺术海报",
+      "defaultPrompt": "Use $photo-to-organic-knit to reinterpret this photo as a bold conceptual knitted-wool art poster.",
+      "size": "3:5",
+      "instructionTemplate": [
+        { "label": "标题文字", "placeholder": "2-4 个词，留空自动起题，填“无”则 不加" }
+      ]
+    }
+  },
+  "enamel-pin-travel-poster": {
+    "manual": {
+      "displayName": "珐琅贴之旅 · Enamel Pin Poster",
+      "shortDescription": "哑光蓝紫面板上托出当地珐琅冰箱贴与细衬线地名，下半保留原图的安静奢华旅行海报",
+      "defaultPrompt": "Use $enamel-pin-travel-poster to turn this travel photo into a fixed-template portrait poster with an enamel fridge-magnet pin and a serif city caption on a matte panel above the untouched photo.",
+      "size": "1024*1536",
+      "instructionTemplate": [
+        { "label": "城市名", "placeholder": "如：Paris，留空则从照片识别" },
+        { "label": "国家名", "placeholder": "如：France，留空则从照片识别" },
+        { "label": "人物入贴", "options": ["关闭"] }
+      ]
+    }
+  },
+  "photo-revival": {
+    "manual": {
+      "displayName": "废片焕新 · Photo Revival",
+      "shortDescription": "把随手拍的照片重绘为白纸大留白、局部浓彩与手写小字批注的诗性手绘插画页",
+      "defaultPrompt": "Use $photo-revival to turn this photo into a 3:4 vertical poetic hand-drawn illustration on white paper with 80-88% blank negative space, a tiny 10-16% subject area, vivid localized color, and tiny handwritten captions.",
+      "size": "1200*1600",
+      "instructionTemplate": [
+        { "label": "小字文案", "placeholder": "如：风从旧店门口经过 / FIELD NOTE，留空则自动生成" },
+        { "label": "笔触", "options": ["水彩", "铅笔", "干刷", "蜡笔", "risograph"] }
+      ]
+    }
+  },
+  "travel-memory-sticker-card": {
+    "manual": {
+      "displayName": "旅行记忆 · Sticker Card",
+      "shortDescription": "哑光水粉剪纸质感的记忆卡，画幅跟随原图（横 4:3 / 竖 3:4），统一左右布局：左侧无边框大插画、右列六枚手切贴纸、底部三个英文关键词",
+      "defaultPrompt": "Use $travel-memory-sticker-card to turn this photo into an orientation-matching collectible memory card with a quiet matte gouache illustration, six die-cut journaling stickers, and three English keywords.",
+      "size": "4:3"
+    }
+  },
+  "surreal-pop-collage": {
+    "manual": {
+      "displayName": "超现实波普 · Surreal Pop",
+      "shortDescription": "主体去色成黑白现实锚，背景换成巨大平涂色形，全图只有一个不可能巨物的超现实拼贴海报",
+      "defaultPrompt": "Use $surreal-pop-collage to transform this photo into a surreal pop collage: keep the subject desaturated to black and white, replace the background with huge flat matte color shapes purified from the photo, and add exactly one impossible giant element rooted in the scene.",
+      "size": "3:4",
+      "instructionTemplate": [
+        { "label": "巨物偏好", "placeholder": "想要的巨物或场景典故，留空则自动推导" },
+        { "label": "色彩策略", "options": ["原色提纯", "互补对撞", "情绪反转"] }
+      ]
+    }
+  },
+  "photo-embossed-relief": {
+    "manual": {
+      "displayName": "压印浮雕 · Embossed Relief",
+      "shortDescription": "照片与乳白纸面浅浮雕重构严格 1:1 相依：横图上下成 3:4 竖版博物馆海报，竖图左右成横版双联",
+      "defaultPrompt": "Use $photo-embossed-relief to turn this photo into a museum-grade embossed relief poster that follows the source orientation: the photograph in one half and a cream-paper bas-relief reconstruction of the same subject in the other, strictly equal.",
+      "size": "x2",
+      "instructionTemplate": [
+        { "label": "标题语言", "options": ["双语", "英文", "中文", "无字"] },
+        { "label": "标题文字", "placeholder": "留空则自动起题" },
+        { "label": "编号注释", "placeholder": "如：AXIAL STUDY 001，留空则自动生成" }
+      ]
+    }
+  },
+  "photo-to-zine-postcard": {
+    "manual": {
+      "displayName": "影志明信片 · Zine Postcard",
+      "shortDescription": "原照嵌入上方、大留白、细墨线薄水彩观察笔记与三枚试色点的固定 2:3 极简摄影 Zine 明信片",
+      "defaultPrompt": "Use $photo-to-zine-postcard to turn this photo into a minimal 2:3 editorial photo-zine postcard front: the untouched photo embedded above, large negative space, one restrained ink-and-thin-wash annotation, and exactly three source-derived pigment dabs.",
+      "size": "1024*1536",
+      "instructionTemplate": [
+        { "label": "标题文字", "placeholder": "英文 2-4 个词，留空则自动起题" },
+        { "label": "地点", "placeholder": "如：Lugano，留空则不填" },
+        { "label": "日期", "placeholder": "如：2026.08，留空则不填" }
+      ]
+    }
+  },
+  "photo-to-monthly-zine-postcard": {
+    "manual": {
+      "displayName": "月历影志 · Monthly Zine",
+      "shortDescription": "原照完整保留于上方、下半缩小的横向月历摄影页：自由边缘水彩块、月份书签栏与三段页脚的固定 3:4 明信片",
+      "defaultPrompt": "Use $photo-to-monthly-zine-postcard to turn this photo into a portrait 3:4 monthly Zine postcard: the complete untouched photo contained above, and a miniature horizontal monthly photography page below with one free-edge watercolor block, an unbordered bookmark column, and a compact footer.",
+      "size": "1200*1600",
+      "instructionTemplate": [
+        { "label": "月份", "placeholder": "如：08 August，留空则从照片推断" },
+        { "label": "文学文字", "placeholder": "如：短标题 + ≤10字短句，留空则自动生成原创旁白" },
+        { "label": "歌曲", "placeholder": "如：歌手《歌名》，留空则音乐区留白" },
+        { "label": "手写句", "placeholder": "英文 ≤6 个词，留空则用默认" },
+        { "label": "页脚", "placeholder": "署名 / 日期 / 收束语，留空则用默认" }
+      ]
+    }
+  },
+  "photo-visual-anatomy": {
+    "manual": {
+      "displayName": "视觉解剖 · Visual Anatomy",
+      "shortDescription": "建筑事务所分析板风格：原图居中柔边溶解于米纸，四周漂浮抽象水彩母题、色点列与发丝线标注的视觉解剖海报",
+      "defaultPrompt": "Use $photo-visual-anatomy to turn this photo into a visual anatomy study board on warm ivory paper: the photo centered with dissolved watercolor edges, surrounded by floating abstract study fragments, a palette dot column, hairline leader-line labels, and a serif VISUAL ANATOMY masthead.",
+      "size": "1024*1280",
+      "instructionTemplate": [
+        { "label": "主标题", "placeholder": "英文 ≤4 词，留空则用 VISUAL ANATOMY" },
+        { "label": "标注", "options": ["英文", "无字"] }
+      ]
+    }
+  },
+  "joy-calm-woodcut-zine": {
+    "manual": {
+      "displayName": "静谧版画 · Woodcut Zine",
+      "shortDescription": "照片整体转译为当代日韩独立杂志风彩色版画：发光纸面大留白、选择性雕刻线条、坚定彩墨与微小排版的固定 3:5 海报",
+      "defaultPrompt": "Use $joy-calm-woodcut-zine to turn this photo into a calm, scene-aware integrated woodcut zine poster on luminous paper.",
+      "size": "960*1600",
+      "instructionTemplate": [
+        { "label": "氛围偏好", "options": ["自动推断", "晴日", "高山", "黄昏", "雾雨", "海岸", "城市"] },
+        { "label": "海报文案", "placeholder": "英文 ≤4 词短文案，留空则自动起题或无字" }
+      ]
+    }
+  },
+  "city-ink-poster": {
+    "manual": {
+      "displayName": "水墨城市 · City Ink",
+      "shortDescription": "只填城市名，提炼地标与气质为吴冠中式黑白灰现代水墨旅行海报：大留白、点线面节奏、双语短句，画幅严格跟随原图比例",
+      "defaultPrompt": "Use $city-ink-poster to turn this photo into a Wu Guanzhong-inspired modern ink city travel poster that follows the source photo's exact aspect ratio: black-white-gray ink landmarks, large negative space, dot-line-plane rhythm, tiny color accents, and an elegant bilingual city caption.",
+      "size": "src",
+      "instructionTemplate": [
+        { "label": "城市名", "placeholder": "如：成都、Paris，留空则从照片识别" },
+        { "label": "中文短句", "placeholder": "≤10 字，如：人间烟火，自在成都，留空则自动生成" },
+        { "label": "英文短句", "placeholder": "≤5 词，如：A City of Ease，留空则自动生成" }
+      ]
+    }
+  },
+  "blue-poster": {
+    "manual": {
+      "displayName": "蓝色光波 · Blue Poster",
+      "shortDescription": "照片重构为暖象牙纸面上的浅石墨建筑线描，叠加 3–6 块普鲁士蓝蓝晒光学载体的收藏级极简印张海报",
+      "defaultPrompt": "Use $blue-poster to turn this photo into a collectible Minimal Blue Poster: one continuous pale-graphite structural drawing on warm ivory paper, 3-6 translucent Prussian-blue optical carriers in at most two clusters, exactly one optical effect program, zero photographic regions and zero text.",
+      "size": "3:4",
+      "instructionTemplate": [
+        { "label": "效果程序", "placeholder": "如：蓝晒光学版 / 光场阵列 / S06，留空则自动匹配" }
+      ]
+    }
+  }
+}

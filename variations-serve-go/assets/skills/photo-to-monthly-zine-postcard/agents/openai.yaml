@@ -1,0 +1,4 @@
+interface:
+  display_name: "月历影志 · Monthly Zine"
+  short_description: "原照完整保留于上方、下半缩小的横向月历摄影页：自由边缘水彩块、月份书签栏与三段页脚的固定 3:4 明信片"
+  default_prompt: "Use $photo-to-monthly-zine-postcard to turn this photo into a portrait 3:4 monthly Zine postcard: the complete untouched photo contained above, and a miniature horizontal monthly photography page below with one free-edge watercolor block, an unbordered bookmark column, and a compact footer."

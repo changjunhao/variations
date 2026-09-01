@@ -1,0 +1,4 @@
+interface:
+  display_name: "Enamel Pin Travel Poster"
+  short_description: "Turn a travel photo into a quiet-luxury poster topped by an enamel destination pin and a serif city caption."
+  default_prompt: "Use $enamel-pin-travel-poster to turn this travel photo into a fixed-template portrait poster with an enamel fridge-magnet pin and a serif city caption on a matte panel above the untouched photo."

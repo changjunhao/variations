@@ -1,0 +1,4 @@
+interface:
+  display_name: "Minimal Blue Poster"
+  short_description: "The photo reconstructed as a pale-graphite architectural drawing on warm ivory paper, overlaid with 3-6 translucent Prussian-blue cyanotype optical carriers running one coherent effect program."
+  default_prompt: "Use $blue-poster to turn this photo into a collectible Minimal Blue Poster: one continuous pale-graphite structural drawing on warm ivory paper, 3-6 translucent Prussian-blue optical carriers in at most two clusters, exactly one optical effect program, zero photographic regions and zero text."

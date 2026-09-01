@@ -1,0 +1,4 @@
+interface:
+  display_name: "Photo Ink Poster"
+  short_description: "The photo's recognizable subject dissolved through ink blooms into a quiet, spacious contemporary ink-wash editorial poster on tactile paper."
+  default_prompt: "Use $photo-ink-poster to turn this photo into a quiet, spacious contemporary ink-wash editorial poster on a fixed vertical 4:5 canvas: the recognizable subject preserved as an integrated image field with ink-dissolved edges, a deliberate low-chroma paper tone, generous quiet negative space, and restrained microtype only when it improves the composition."

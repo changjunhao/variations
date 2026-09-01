@@ -1,0 +1,4 @@
+interface:
+  display_name: "影志明信片 · Zine Postcard"
+  short_description: "原照为证、留白为语：固定 2:3 的极简摄影 Zine 明信片正面（墨线薄水彩注释 + 三枚试色点）"
+  default_prompt: "Use $photo-to-zine-postcard to turn this photo into a minimal 2:3 editorial photo-zine postcard front: the untouched photo embedded above, large negative space, one restrained ink-and-thin-wash annotation, and exactly three source-derived pigment dabs."

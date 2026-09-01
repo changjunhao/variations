@@ -1,0 +1,26 @@
+[Unit]
+Description=Variations Go API Server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=variations
+Group=variations
+WorkingDirectory=/opt/variations-serve
+EnvironmentFile=/opt/variations-serve/variations.env
+ExecStart=/opt/variations-serve/bin/variations-serve
+Restart=on-failure
+RestartSec=3
+# 优雅关停：服务内部等待在途长请求最多 30s，此处留足余量
+TimeoutStopSec=35
+LimitNOFILE=65536
+# 安全加固
+NoNewPrivileges=true
+ProtectSystem=strict
+# 仅 DB 目录可写（assets 只读热更新、二进制只读）
+ReadWritePaths=/opt/variations-serve/data
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

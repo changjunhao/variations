@@ -1,0 +1,4 @@
+interface:
+  display_name: "Photo Essence Strata"
+  short_description: "A portrait three-strata archival plate: the untouched photo band on top, a watercolor memory with a serif title in the middle, and an archetypal geometric essence with a small archive line at the bottom."
+  default_prompt: "Use $photo-essence-strata to turn this photo into a fixed portrait 3:5 archival plate of three vertical strata: the untouched photo as a full-width band on top (reality), a soft watercolor recollection of the same scene with one elegant serif title in the middle (memory), and an archetypal geometric reduction with a small NO./date/theme archive line at the bottom (essence)."

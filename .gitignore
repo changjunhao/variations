@@ -1,0 +1,48 @@
+# macOS
+.DS_Store
+
+# Xcode 用户个人数据
+xcuserdata/
+*.xcuserstate
+*.xcscmblueprint
+*.xccheckout
+
+# 构建产物
+build/
+DerivedData/
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Swift Package Manager
+.build/
+.swiftpm/
+
+# CocoaPods（如后续使用再启用）
+# Pods/
+
+# Accio（如后续使用再启用）
+# Dependencies/
+# .accio/
+
+# 环境变量与密钥
+.env
+.env.*
+!.env.example
+*.p12
+*.cer
+Secrets.xcconfig
+
+# Node
+node_modules/
+dist/
+output/
+tsconfig.tsbuildinfo
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+coverage/
+.qoder/
+.workbuddy/
+Variations/AppStore/

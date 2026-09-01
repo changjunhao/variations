@@ -1,0 +1,4 @@
+interface:
+  display_name: "压印浮雕"
+  short_description: "照片与乳白纸面浅浮雕重构严格 1:1 相依：横图上下成竖版博物馆海报，竖图左右成横版双联"
+  default_prompt: "Use $photo-embossed-relief to turn this photo into a museum-grade embossed relief poster that follows the source orientation: the photograph in one half and a cream-paper bas-relief reconstruction of the same subject in the other, strictly equal."

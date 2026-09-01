@@ -1,0 +1,4 @@
+interface:
+  display_name: "Pixel Style Poster"
+  short_description: "Generate fine dot-matrix editorial posters with restrained typography"
+  default_prompt: "Use $pixel-style-poster-skill to turn this theme or photo into a fine dot-matrix editorial poster."

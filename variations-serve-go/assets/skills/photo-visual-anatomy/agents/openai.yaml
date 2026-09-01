@@ -1,0 +1,4 @@
+interface:
+  display_name: "视觉解剖"
+  short_description: "建筑事务所分析板风格：原图居中柔边溶解于米纸，四周漂浮水彩母题、色点列与发丝线标注的视觉解剖海报"
+  default_prompt: "Use $photo-visual-anatomy to turn this photo into a visual anatomy study board on warm ivory paper: the photo centered with dissolved watercolor edges, surrounded by floating abstract study fragments, a palette dot column, hairline leader-line labels, and a serif VISUAL ANATOMY masthead."

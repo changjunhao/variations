@@ -1,0 +1,4 @@
+interface:
+  display_name: "Photo Ink Echo"
+  short_description: "Create one-subject watercolor memory editorials"
+  default_prompt: "Use $photo-ink-echo to turn this photo into a restrained editorial diptych that follows the source orientation, with the untouched photo in one region and one clear primary subject plus only a few pale, incomplete supporting traces in a very small watercolor memory motif on the adjoining warm-ivory panel."

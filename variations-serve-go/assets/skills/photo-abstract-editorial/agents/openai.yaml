@@ -1,0 +1,4 @@
+interface:
+  display_name: "Photo Abstract Editorial"
+  short_description: "Turn a photograph into a photo-plus-abstraction editorial poster."
+  default_prompt: "Use $photo-abstract-editorial to turn this photograph into a photo-and-abstract editorial composition."

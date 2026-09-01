@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>隐私政策 · 变奏 Variations</title>
+<style>
+  :root {
+    --paper: #FAF8F3; --card: #F4F1E9; --ink: #1E1B17; --ink2: #6B655A;
+    --vermilion: #BE3E2B; --hairline: #EAE5D9;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--paper); color: var(--ink);
+    font: 16px/1.8 -apple-system, "PingFang SC", "Noto Sans SC", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  main { max-width: 720px; margin: 0 auto; padding: 56px 24px 96px; }
+  .wordmark {
+    font-family: "Songti SC", "Noto Serif SC", Georgia, serif;
+    font-style: italic; font-size: 34px; letter-spacing: .01em;
+  }
+  h1 { font-size: 24px; margin: 8px 0 4px; }
+  .meta { color: var(--ink2); font-size: 13px; margin-bottom: 32px; }
+  h2 {
+    font-size: 17px; margin: 36px 0 12px; padding-left: 12px;
+    border-left: 3px solid var(--vermilion);
+  }
+  p, li { color: var(--ink); }
+  p + p { margin-top: 8px; }
+  ul, ol { padding-left: 1.4em; }
+  li { margin: 6px 0; }
+  .note {
+    background: var(--card); border-radius: 12px;
+    padding: 16px 20px; margin: 16px 0; font-size: 14px; color: var(--ink2);
+  }
+  a { color: var(--vermilion); text-decoration: none; }
+  footer { margin-top: 64px; color: var(--ink2); font-size: 13px; border-top: 1px solid var(--hairline); padding-top: 20px; }
+  @media (prefers-color-scheme: dark) {
+    :root { --paper: #191613; --card: #221F1A; --ink: #FAF8F3; --ink2: #A9A294; --vermilion: #D95740; --hairline: #2E2A24; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <div class="wordmark">Variations</div>
+  <h1>隐私政策</h1>
+  <p class="meta">生效日期：2026 年 8 月 24 日 · 运营者：常君豪（「变奏 Variations」，以下简称「我们」）</p>
+
+  <p>变奏 Variations（以下简称「本应用」）是一款将您的照片生成艺术风格变奏的工具。我们深知个人信息的重要性，并遵循《中华人民共和国个人信息保护法》《网络安全法》等法律法规，以「最小必要」原则处理您的信息。请您在使用本应用前仔细阅读本政策。</p>
+
+  <h2>一、我们收集的信息</h2>
+  <ol>
+    <li><strong>账号信息</strong>。您可以使用「通过 Apple 登录」创建账号。Apple 向我们提供：用户唯一标识、邮箱地址（若您选择「隐藏邮箱」，则为 Apple 私密转发地址）、姓名（仅在您首次授权时提供，您可以拒绝）。不登录亦可使用游客模式，此时我们仅为您生成一个本地设备标识符（随机 UUID，存于您的设备）。</li>
+    <li><strong>您上传的内容</strong>。用于生成变奏的照片、您编辑或输入的提示词、附加指令。照片经加密传输上传至阿里云对象存储（OSS），<strong>48 小时后自动删除</strong>。</li>
+    <li><strong>生成记录</strong>。变奏结果缩略图与提示词保存在您的设备本地；服务端仅保留必要的请求日志（不含照片内容）用于安全与限流。</li>
+    <li><strong>购买记录</strong>。若您购买「次数」积分包，支付由 Apple 内购完成，<strong>我们不收集您的银行卡、支付密码等支付信息</strong>；我们仅记录 Apple 交易标识与落账次数，用于权益发放。</li>
+    <li><strong>设备与日志信息</strong>。设备名称、请求时间、IP 地址等，用于安全防护、频率限制与故障排查。</li>
+  </ol>
+
+  <h2>二、我们如何使用信息</h2>
+  <ul>
+    <li>向您提供照片变奏生成服务（将照片与提示词提交至 AI 模型处理）；</li>
+    <li>维护账号与权益（每日额度、已购次数）；</li>
+    <li>保障服务安全，防止滥用（限流、风控）；</li>
+    <li>履行法律法规规定的义务。</li>
+  </ul>
+  <p>我们不会将您的个人信息用于广告营销，不会向任何第三方出售您的个人信息。</p>
+
+  <h2>三、信息的共享与委托处理</h2>
+  <ul>
+    <li><strong>AI 服务供应商</strong>（阿里云百炼 / 火山方舟）：仅接收当次生成所需的照片与提示词，用于完成生成任务；</li>
+    <li><strong>阿里云对象存储（OSS）</strong>：临时存储您上传的照片，48 小时生命周期自动清理；</li>
+    <li><strong>Apple</strong>：「通过 Apple 登录」与 App 内购买由 Apple 按其隐私政策处理；</li>
+    <li>除上述为提供服务所必需的情形及法律法规要求外，我们不会共享您的个人信息。</li>
+  </ul>
+
+  <h2>四、信息的存储与保留期限</h2>
+  <ul>
+    <li>上传照片：48 小时后自动删除；</li>
+    <li>会话令牌：最长 30 天，退出登录即吊销；</li>
+    <li>已购次数：永久保留直至账号注销（权益属性，不设定有效期）；</li>
+    <li>账号信息：保留至您注销账号；注销后我们删除或匿名化处理；</li>
+    <li>请求日志：不超过 30 天。</li>
+  </ul>
+  <p>上述信息存储于中华人民共和国境内的服务器。</p>
+
+  <h2>五、您的权利</h2>
+  <ul>
+    <li><strong>查询与更正</strong>：在「我的」页可查看账号名称、邮箱与额度信息；</li>
+    <li><strong>删除与注销</strong>：在「我的」页点击「注销账号」，我们将删除账号、登录状态与云端用量记录；本机已保存的变奏图由您自行管理；</li>
+    <li><strong>撤回同意</strong>：您可在系统设置中撤销对 Apple 登录的授权；撤销后不影响此前基于同意已进行的处理；</li>
+    <li>若您对本政策或个人信息处理有任何疑问或诉求，可通过文末方式联系我们，我们将在 15 日内回复。</li>
+  </ul>
+
+  <h2>六、未成年人保护</h2>
+  <p>本应用面向一般用户，不面向未满 14 周岁的儿童提供服务。若我们发现在未获监护人同意情况下收集了儿童个人信息，将尽快删除。</p>
+
+  <h2>七、安全措施</h2>
+  <p>我们采用传输加密（HTTPS）、令牌哈希存储、最小权限访问等安全措施保护您的信息。但请理解，任何技术措施均无法保证绝对安全，请您妥善保管账号设备。</p>
+
+  <h2>八、本政策的更新</h2>
+  <p>我们可能适时修订本政策；重大变更将在应用内或启动时以显著方式提示。更新后的政策将在本页面发布并标注生效日期。</p>
+
+  <h2>九、联系我们</h2>
+  <p>邮箱：<a href="mailto:variations@ifable.cn">variations@ifable.cn</a></p>
+  <div class="note">提示：本应用首次启动需您同意本政策与《用户协议》后方可使用联网功能；不同意仍可浏览应用内已缓存内容。</div>
+
+  <footer>© 2026 常君豪 · 变奏 Variations · <a href="/terms">用户协议</a></footer>
+</main>
+</body>
+</html>
