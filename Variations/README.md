@@ -2,6 +2,8 @@
 
 变奏 Variations 的 iOS/iPad 胖客户端：本地编排三流程（官方模版 / 我的模版 / 直接输入），
 图片经 OSS 预签名直传，服务端只编译提示词与调生图模型。
+账号体系为 Sign in with Apple（游客可先体验），配额三态（游客体验 / 新用户特权 / IAP 已购余额）+ StoreKit 2 积分包，
+首次启动有隐私同意闸门（中国区合规）。
 
 ## 联调步骤
 
@@ -9,7 +11,8 @@
 
    ```bash
    cd ../variations-serve-go
-   cp .env.example .env   # 至少填 REGISTER_SECRET；真实链路还需供应商/OSS 密钥
+   cp .env.example .env   # 至少填 REGISTER_SECRET；生图链路还需供应商/OSS 密钥，
+                          # 账号与内购链路另需 APPLE_CLIENT_ID / IAP_PRODUCT_MAP
    make dev               # 加载 .env 运行
    ```
 
@@ -24,6 +27,8 @@
    - Release 构建强制使用构建期正式地址，设置页不可改。
    - 鉴权为**设备身份令牌**：首次启动自动调 `POST /api/auth/device` 注册换取长期 token（存 Keychain），无需手工配置；
      后端 `.env` 的 `REGISTER_SECRET` 须与客户端 `Configurations/Secrets.xcconfig` 一致（经 Info.plist 构建期注入，不入库）。
+   - **账号（可选）**：Sign in with Apple 登录后调 `POST /api/auth/apple` 换发用户会话令牌（存 Keychain，与设备令牌同构），
+     解锁新用户特权配额；游客身份仍可完成一次体验。本地联调需后端配置 `APPLE_CLIENT_ID`（正式签名 + 真机才可完整走通）。
 
 4. 后端监听：默认 `HOST=0.0.0.0` 供真机/局域网联调；鉴权闸门由设备 token 承担。
 
@@ -64,6 +69,7 @@ xcodebuild test -scheme Variations \
 
 - `DesignSystem/` 令牌与通用组件（日谱/夜谱动态色）
 - `Models/` DTO 与 SwiftData 模型
-- `Services/` APIClient / DeviceAuth（设备令牌） / 压缩 / OSS 直传 / 设置 / 环境配置 / Nuke 引导
-- `Features/` 按页面分目录（Home / Flow / Collection / Direct / SkillEditor / Result / Settings）；`Navigation.swift` 路由、`Router.swift` 栈
+- `Services/` APIClient / DeviceAuth（设备令牌） / AccountAuth（SIWA 会话） / Store（StoreKit 2 积分包） / QuotaStore（配额三态） / ConsentStore（隐私同意） / 压缩 / OSS 直传 / 设置 / 环境配置 / AppServices 依赖容器 / Nuke 引导
+- `Features/` 按页面分目录（Home / Flow / Collection / Direct / SkillEditor / Result / Settings 我的页 / Account 同意闸门与付费墙）；`Navigation.swift` 路由、`Router.swift` 栈
 - `Stores/` 结果图与缩略图文件存储
+- `AppStore/` App Store 营销资产（puppeteer 渲染截图/预览视频的 HTML 源）；配套 `MarketingSeed.swift`（仅 DEBUG 注入演示记录）

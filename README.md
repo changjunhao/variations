@@ -37,14 +37,15 @@ variations-serve-go/   Go 后端（Gin / SQLite / OSS 预签名，唯一服务�
 核心链路：
 
 1. **设备身份令牌**：首次启动以自生成 UUID + HMAC proof 调 `POST /api/auth/device` 换取长期 token（存 Keychain），业务请求携带 `Authorization: Bearer`；401 自动重注册自愈
-2. **原图直传**：客户端压缩后按内容寻址（SHA-256）取预签名 PUT 票据直传 OSS，服务端不经手图片字节；`uploads/` 前缀 48h 生命周期自动清理
-3. **提示词编译**：`POST /api/compile` 以 VL 模型（Responses API）将技能 SKILL.md + 照片编译为结构化提示词
-4. **生图**：`POST /api/image` 以提示词 + 参考图 URL 调生图模型，返回 OSS GET 预签名 URL
-5. **再次变奏**：对象 48h 内存在则经 `GET /api/file-url` 探测重签新 GET 票据；已清理返回 410
+2. **账号与配额**：可选 Sign in with Apple 登录（`POST /api/auth/apple` 换发用户会话令牌）；生图配额阶梯 = 游客终身 1 次体验 → 新用户 7 日特权（每日 10 次）→ IAP 积分包余额，失败原路退还；`POST /api/billing/confirm` 服务端验签落账
+3. **原图直传**：客户端压缩后按内容寻址（SHA-256）取预签名 PUT 票据直传 OSS，服务端不经手图片字节；`uploads/` 前缀 48h 生命周期自动清理
+4. **提示词编译**：`POST /api/compile` 以 VL 模型（Responses API）将技能 SKILL.md + 照片编译为结构化提示词（每日防刷上限，不扣次数）
+5. **生图**：`POST /api/image` 以提示词 + 参考图 URL 调生图模型，返回 OSS GET 预签名 URL（唯一配额扣减点）
+6. **再次变奏**：对象 48h 内存在则经 `GET /api/file-url` 探测重签新 GET 票据；已清理返回 410
 
 ## 技能（skills）
 
-`variations-serve-go/assets/skills/` 内置 21 个官方技能模板（压印浮雕、墨迹海报、像素海报、超现实拼贴、有机针织、Minecraft 世界等），每个技能为自包含目录：
+`variations-serve-go/assets/skills/` 内置 27 个官方技能模板（压印浮雕、墨迹海报、像素海报、超现实拼贴、有机针织、Minecraft 世界等），每个技能为自包含目录：
 
 ```
 skills/<skill-id>/
@@ -62,7 +63,7 @@ skills/<skill-id>/
 | 供应商 | VL 编译 | 生图 |
 |---|---|---|
 | qwen（阿里百炼） | qwen3.7-plus（Responses API） | qwen-image-3.0 |
-| ark（火山方舟） | doubao-seed-2-0-lite | doubao-seedream-5-0 |
+| ark（火山方舟） | doubao-seed-2-0-lite-260428 | doubao-seedream-5-0-260128 |
 
 ## 快速开始
 
@@ -70,7 +71,8 @@ skills/<skill-id>/
 
 ```bash
 cd variations-serve-go
-cp .env.example .env   # 至少填 REGISTER_SECRET；真实链路还需供应商/OSS 密钥
+cp .env.example .env   # 至少填 REGISTER_SECRET；生图链路还需供应商/OSS 密钥，
+                       # 账号与内购链路另需 APPLE_CLIENT_ID / IAP_PRODUCT_MAP
 make dev               # 默认 :8788
 make test && make smoke
 ```
