@@ -120,6 +120,28 @@ func TestAppleLoginQuotaAndDelete(t *testing.T) {
 	}
 }
 
+// Staff 白名单配额口径：登录响应与 GET /api/quota 必须同为 staff
+// （登录响应漏覆写会让客户端「我的」页权益行登录后短暂误显 user 态）
+func TestStaffQuotaTierConsistentAcrossLoginAndQuota(t *testing.T) {
+	env := newTestEnvWith(t, func(c *config.Config) {
+		c.StaffUserIDs = map[string]bool{"apple-sub-staff": true}
+	})
+
+	token, quota := appleLogin(t, env, signAppleToken(t, "apple-sub-staff", "staff@privaterelay.appleid.com"))
+	if quota["tier"] != "staff" {
+		t.Fatalf("登录配额 tier 应为 staff: %v", quota)
+	}
+
+	w := do(t, env.engine, "GET", "/api/quota", "", token)
+	if w.Code != 200 {
+		t.Fatalf("quota 应 200: %d %s", w.Code, w.Body.String())
+	}
+	var q map[string]any
+	if err := json.Unmarshal(w.Body.Bytes(), &q); err != nil || q["tier"] != "staff" {
+		t.Fatalf("quota tier 应为 staff: %s", w.Body.String())
+	}
+}
+
 func TestAppleLoginInvalidToken(t *testing.T) {
 	env := newTestEnv(t)
 

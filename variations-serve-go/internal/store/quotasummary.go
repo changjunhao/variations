@@ -52,9 +52,10 @@ type PaidSummary struct {
 	Remaining int `json:"remaining"`
 }
 
-// BuildQuotaSummary 组装配额摘要：游客→trial；用户→privilege+paid；admin→仅 tier。
-// exhaustedSrc 非空时写入 source（"{src}_exhausted"）。
-func BuildQuotaSummary(ctx context.Context, quota *QuotaRepo, users *UserRepo, principal, userID, createdAtRaw string, guestTotal, privDays, privDaily int, exhaustedSrc string) QuotaSummary {
+// BuildQuotaSummary 组装配额摘要：游客→trial；用户→privilege+paid；admin→仅 tier；staff→覆写 tier。
+// exhaustedSrc 非空时写入 source（"{src}_exhausted"）；staff 为真时对外口径统一为创作者模式
+// （GET /api/quota、登录响应、429 共用，避免登录响应漏覆写导致客户端权益行短暂误显 user 态）。
+func BuildQuotaSummary(ctx context.Context, quota *QuotaRepo, users *UserRepo, principal, userID, createdAtRaw string, guestTotal, privDays, privDaily int, exhaustedSrc string, staff bool) QuotaSummary {
 	s := QuotaSummary{ResetsAt: quota.ResetsAt().Format(time.RFC3339)}
 	if exhaustedSrc != "" {
 		s.Source = exhaustedSrc + "_exhausted"
@@ -88,5 +89,8 @@ func BuildQuotaSummary(ctx context.Context, quota *QuotaRepo, users *UserRepo, p
 		LimitToday:     privDaily,
 	}
 	s.Paid = &PaidSummary{Remaining: paid}
+	if staff {
+		s.Tier = "staff"
+	}
 	return s
 }

@@ -119,7 +119,8 @@ func QuotaGuardDaily(quota *store.QuotaRepo, principalFor func(principal string)
 func renderQuotaExceeded(c *gin.Context, cfg *config.Config, quota *store.QuotaRepo, users *store.UserRepo, base string, src quotaSource) {
 	summary := store.BuildQuotaSummary(
 		c.Request.Context(), quota, users, base, httpx.UserID(c), httpx.UserCreatedAt(c),
-		cfg.GuestFreeTotal, cfg.NewUserPrivilegeDays, cfg.NewUserDaily, string(src))
+		cfg.GuestFreeTotal, cfg.NewUserPrivilegeDays, cfg.NewUserDaily, string(src),
+		cfg.StaffUserIDs[httpx.UserID(c)])
 	c.AbortWithStatusJSON(429, gin.H{
 		"code":    httpx.CodeQuotaExceeded,
 		"message": "今日次数已用完",

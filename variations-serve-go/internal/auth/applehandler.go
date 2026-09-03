@@ -107,6 +107,7 @@ func (h *AppleLoginHandler) Handle(c *gin.Context) {
 		},
 		"quota": store.BuildQuotaSummary(
 			c.Request.Context(), h.quotas, h.users, principal, user.ID, createdAtRaw,
-			h.cfg.GuestFreeTotal, h.cfg.NewUserPrivilegeDays, h.cfg.NewUserDaily, ""),
+			h.cfg.GuestFreeTotal, h.cfg.NewUserPrivilegeDays, h.cfg.NewUserDaily, "",
+			h.cfg.StaffUserIDs[user.ID]),
 	})
 }

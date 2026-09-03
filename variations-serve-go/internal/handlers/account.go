@@ -61,9 +61,7 @@ func (h *AccountHandler) Quota(c *gin.Context) {
 	}
 	summary := store.BuildQuotaSummary(
 		c.Request.Context(), h.quotas, h.users, principal, httpx.UserID(c), httpx.UserCreatedAt(c),
-		h.cfg.GuestFreeTotal, h.cfg.NewUserPrivilegeDays, h.cfg.NewUserDaily, "")
-	if h.cfg.StaffUserIDs[httpx.UserID(c)] {
-		summary.Tier = "staff"
-	}
+		h.cfg.GuestFreeTotal, h.cfg.NewUserPrivilegeDays, h.cfg.NewUserDaily, "",
+		h.cfg.StaffUserIDs[httpx.UserID(c)])
 	c.JSON(200, summary)
 }
