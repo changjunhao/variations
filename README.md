@@ -7,7 +7,7 @@ iOS/iPad 胖客户端 + Go 轻量后端的 monorepo：客户端负责编排与�
 ## 仓库结构
 
 ```
-Variations/            iOS/iPad 客户端（SwiftUI / SwiftData / Swift 6）
+Variations/            iOS/iPad 客户端（SwiftUI / SwiftData）
 variations-serve-go/   Go 后端（Gin / SQLite / OSS 预签名，唯一服务端）
 ```
 
