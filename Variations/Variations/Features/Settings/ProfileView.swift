@@ -143,8 +143,11 @@ struct ProfileView: View {
                         fullName = [n.givenName, n.familyName].compactMap { $0 }.joined(separator: " ")
                     }
                     exchangeLogin(identityToken: identityToken, fullName: fullName)
-                case .failure:
-                    break // 用户取消或系统失败：静默
+                case .failure(let error):
+                    // 用户取消静默；系统级失败（如 iOS 26 SIWA 回归致面板报 Sign Up Not Completed）
+                    // 必须给出重试与游客兜底引导，避免被误判为 App 不可用
+                    if let error = error as? ASAuthorizationError, error.code == .canceled { return }
+                    accountNotice = "Apple 账号登录未能完成，请检查网络后重试；也可不登录以游客身份使用。"
                 }
             }
             .signInWithAppleButtonStyle(colorScheme == .dark ? .white : .black)
