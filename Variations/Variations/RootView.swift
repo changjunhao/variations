@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 
 enum AppTab: String, CaseIterable, Identifiable {
     case home = "首页"
