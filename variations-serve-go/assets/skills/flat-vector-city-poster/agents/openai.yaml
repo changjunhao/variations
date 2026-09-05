@@ -1,0 +1,4 @@
+interface:
+  display_name: "Flat Vector City Poster"
+  short_description: "A premium minimalist flat-vector city travel poster in Japanese stationery-goods aesthetics: misty-blue palette, one focal landmark with 2-4 local elements, tiny street-life figures, quiet upper-left city typography, on a fixed portrait 3:4 canvas."
+  default_prompt: "Use $flat-vector-city-poster to turn this travel photo into a premium flat-vector city travel poster in Japanese stationery style: misty-blue palette, distilled landmarks and street life, quiet upper-left typography, fixed 3:4 portrait canvas."

@@ -328,5 +328,17 @@
         { "label": "效果程序", "placeholder": "如：蓝晒光学版 / 光场阵列 / S06，留空则自动匹配" }
       ]
     }
+  },
+  "flat-vector-city-poster": {
+    "manual": {
+      "displayName": "雾蓝旅帖 · Flat Vector City",
+      "shortDescription": "日系文具美学的扁平矢量旅行海报：雾蓝色系蒸馏城市地标与日常，左上细字城市名与英文标语，固定 3:4 竖版",
+      "defaultPrompt": "Use $flat-vector-city-poster to turn this travel photo into a premium flat-vector city travel poster in Japanese stationery style: misty-blue palette, one focal landmark with 2-4 local elements, tiny street-life figures, quiet upper-left city typography, fixed 3:4 portrait canvas.",
+      "size": "960*1280",
+      "instructionTemplate": [
+        { "label": "城市名", "placeholder": "如：成都、Paris，留空则从照片识别" },
+        { "label": "英文标语", "placeholder": "≤5 词，如：A City of Ease，留空则自动生成" }
+      ]
+    }
   }
 }
