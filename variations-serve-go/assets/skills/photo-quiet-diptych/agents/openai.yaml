@@ -1,0 +1,4 @@
+interface:
+  display_name: "静影双联 · Quiet Diptych"
+  short_description: "上半照片保真满幅、下半极小手绘纸质插画被大留白包围的安静诗意固定 3:4 双联艺术书封"
+  default_prompt: "Use $photo-quiet-diptych to turn this photo into a quiet fixed 3:4 diptych art-book cover: the faithful photograph full-bleeds the top half, and a tiny hand-drawn paper illustration of the same scene floats in vast warm-paper negative space below, with restrained microtype beneath."

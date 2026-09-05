@@ -340,5 +340,18 @@
         { "label": "英文标语", "placeholder": "≤5 词，如：A City of Ease，留空则自动生成" }
       ]
     }
+  },
+  "photo-quiet-diptych": {
+    "manual": {
+      "displayName": "静影双联 · Quiet Diptych",
+      "shortDescription": "上半照片保真满幅、下半极小手绘纸质插画被大留白包围的安静诗意固定 3:4 双联艺术书封",
+      "defaultPrompt": "Use $photo-quiet-diptych to turn this photo into a quiet fixed 3:4 diptych art-book cover: the faithful photograph full-bleeds the top half, and a tiny hand-drawn paper illustration of the same scene floats in vast warm-paper negative space below, with restrained microtype beneath.",
+      "size": "1200*1600",
+      "instructionTemplate": [
+        { "label": "标题文字", "placeholder": "英文 2-4 词或中文 ≤8 字，留空则自动起题" },
+        { "label": "地点", "placeholder": "如：Melbourne / 月下神社，留空则不填" },
+        { "label": "年份", "placeholder": "如：2024，留空则不填" }
+      ]
+    }
   }
 }
