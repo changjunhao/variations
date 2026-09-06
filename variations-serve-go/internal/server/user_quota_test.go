@@ -101,7 +101,7 @@ func TestAppleLoginQuotaAndDelete(t *testing.T) {
 		t.Fatalf("换发后旧令牌应 401: %d", w.Code)
 	}
 
-	// 注销账号：令牌失效，再登录 403 ACCOUNT_DELETED
+	// 注销账号：令牌失效、个人信息被清
 	w = do(t, env.engine, "POST", "/api/account/delete", "", token2)
 	if w.Code != 200 {
 		t.Fatalf("注销应 200: %d %s", w.Code, w.Body.String())
@@ -110,13 +110,49 @@ func TestAppleLoginQuotaAndDelete(t *testing.T) {
 	if w.Code != 401 {
 		t.Fatalf("注销后会话令牌应 401: %d", w.Code)
 	}
-	payload, _ := json.Marshal(map[string]string{"identityToken": signAppleToken(t, "apple-sub-1", "x@y.z")})
-	w = do(t, env.engine, "POST", "/api/auth/apple", string(payload), "")
-	if w.Code != 403 {
-		t.Fatalf("已注销账号再登录应 403: %d", w.Code)
+	deleted, err := env.userRepo.GetUser(context.Background(), "apple-sub-1")
+	if err != nil {
+		t.Fatalf("读取已注销用户失败: %v", err)
 	}
-	if code, _ := parseErr(t, w); code != "ACCOUNT_DELETED" {
-		t.Fatalf("错误码应为 ACCOUNT_DELETED: %s", code)
+	if deleted.Email != "" || deleted.FullName != "" {
+		t.Fatalf("注销应清除邮箱与昵称: %+v", deleted)
+	}
+}
+
+// 注销后同一 Apple ID 重新登录必须能复活（永久锁死会直接阻死审核），
+// 但 created_at 不重置——否则「注销→重登」可反复刷新用户 7 日特权；已购次数也不能丢
+func TestDeletedAccountRevivesOnRelogin(t *testing.T) {
+	env := newTestEnv(t)
+	ctx := context.Background()
+
+	token, _ := appleLogin(t, env, signAppleToken(t, "apple-sub-revive", "a@b.c"))
+	if _, _, err := env.userRepo.CreditPurchase(ctx, "tx-1", "apple-sub-revive", "test.pack.small", 10); err != nil {
+		t.Fatalf("预置已购次数失败: %v", err)
+	}
+	before, err := env.userRepo.CreatedAt(ctx, "apple-sub-revive")
+	if err != nil {
+		t.Fatalf("读取注册时间失败: %v", err)
+	}
+
+	if w := do(t, env.engine, "POST", "/api/account/delete", "", token); w.Code != 200 {
+		t.Fatalf("注销应 200: %d %s", w.Code, w.Body.String())
+	}
+
+	// 重新登录：200 而非 403，且新会话可用
+	reborn, quota := appleLogin(t, env, signAppleToken(t, "apple-sub-revive", "a@b.c"))
+	if w := do(t, env.engine, "GET", "/api/quota", "", reborn); w.Code != 200 {
+		t.Fatalf("复活后会话应可用: %d", w.Code)
+	}
+	paid, _ := quota["paid"].(map[string]any)
+	if paid == nil || paid["remaining"] != float64(10) {
+		t.Fatalf("复活后已购次数应留存 10: %v", quota)
+	}
+	after, err := env.userRepo.CreatedAt(ctx, "apple-sub-revive")
+	if err != nil {
+		t.Fatalf("读取注册时间失败: %v", err)
+	}
+	if !after.Equal(before) {
+		t.Fatalf("复活不得重置 created_at（否则特权窗口可刷）: %v → %v", before, after)
 	}
 }
 

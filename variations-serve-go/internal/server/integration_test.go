@@ -87,12 +87,12 @@ func newTestEnvWith(t *testing.T, mutate func(*config.Config)) *testEnv {
 	userRepo := store.NewUserRepo(db)
 	quotaRepo := store.NewQuotaRepo(db)
 	assetStore := skill.NewStore(assetsDir, logger)
-	accountHandler := handlers.NewAccountHandler(userRepo, quotaRepo, cfg, logger)
+	accountHandler := handlers.NewAccountHandler(userRepo, quotaRepo, nil, cfg, logger)
 	appleVerifier := auth.NewAppleVerifierWithSource("test-client", staticKeySource{}, time.Hour)
 
 	engine := server.BuildRoutes(cfg, logger, authRepo, quotaRepo, userRepo, server.Handlers{
 		Register:       auth.NewRegisterHandler(auth.NewHMACGate(cfg.RegisterSecret), authRepo, logger).Handle,
-		AppleLogin:     auth.NewAppleLoginHandler(appleVerifier, userRepo, quotaRepo, cfg, logger).Handle,
+		AppleLogin:     auth.NewAppleLoginHandler(appleVerifier, nil, userRepo, quotaRepo, cfg, logger).Handle,
 		Logout:         accountHandler.Logout,
 		DeleteAccount:  accountHandler.DeleteAccount,
 		Quota:          accountHandler.Quota,

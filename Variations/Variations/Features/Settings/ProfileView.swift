@@ -104,7 +104,7 @@ struct ProfileView: View {
             Button("好") { accountNotice = nil }
         }
         .confirmationDialog(
-            "注销账号？将删除账号、登录状态与云端用量记录；本机已保存的变奏图不受影响。此操作不可恢复。",
+            "注销账号？将删除你的姓名与邮箱、清除登录状态，并撤销本 App 的 Apple 授权。本机已保存的变奏图不受影响；日后用同一 Apple ID 重新登录，已购次数仍可用，但新用户特权不会重新开始。",
             isPresented: $confirmDelete,
             titleVisibility: .visible
         ) {
@@ -142,7 +142,13 @@ struct ProfileView: View {
                     if let n = credential.fullName {
                         fullName = [n.givenName, n.familyName].compactMap { $0 }.joined(separator: " ")
                     }
-                    exchangeLogin(identityToken: identityToken, fullName: fullName)
+                    // authorizationCode 一次性、5 分钟内有效：服务端据此换 refresh_token，
+                    // 注销账号时用于撤销 Apple 授权（Guideline 5.1.1(v) 硬要求）
+                    let authorizationCode = credential.authorizationCode
+                        .flatMap { String(data: $0, encoding: .utf8) } ?? ""
+                    exchangeLogin(identityToken: identityToken,
+                                  authorizationCode: authorizationCode,
+                                  fullName: fullName)
                 case .failure(let error):
                     // 用户取消静默；系统级失败（如 iOS 26 SIWA 回归致面板报 Sign Up Not Completed）
                     // 必须给出重试与游客兜底引导，避免被误判为 App 不可用
@@ -346,13 +352,16 @@ struct ProfileView: View {
     // MARK: - 动作
 
     /// 系统 SIWA 面板凭据 → POST /api/auth/apple 换发会话令牌
-    private func exchangeLogin(identityToken: String, fullName: String) {
+    private func exchangeLogin(identityToken: String, authorizationCode: String, fullName: String) {
         guard !accountBusy else { return }
         accountBusy = true
         Task {
             defer { accountBusy = false }
             do {
-                let reply = try await services.api.loginWithApple(identityToken: identityToken, fullName: fullName)
+                let reply = try await services.api.loginWithApple(
+                    identityToken: identityToken,
+                    authorizationCode: authorizationCode,
+                    fullName: fullName)
                 session = reply.user
                 services.quotaStore.apply(reply.quota)
             } catch let error as AppError {

@@ -160,7 +160,7 @@ actor APIClient {
     // MARK: - 账号（SIWA 用户系统）
 
     /// 登录：SIWA 系统面板凭据 → POST /api/auth/apple 换发会话令牌（公开端点，不携 Bearer）
-    func loginWithApple(identityToken: String, fullName: String) async throws -> LoginReply {
+    func loginWithApple(identityToken: String, authorizationCode: String, fullName: String) async throws -> LoginReply {
         guard let accountAuth else { throw AppError.notConfigured }
         try await assertConsent()
         let base = await currentBaseURL()
@@ -170,11 +170,14 @@ actor APIClient {
         request.timeoutInterval = 30
         struct Payload: Encodable {
             let identityToken: String
+            /// 一次性授权码：服务端据此换 refresh_token，供注销时撤销 Apple 授权（Guideline 5.1.1(v)）
+            let authorizationCode: String
             let fullName: String
             let deviceId: String?
         }
         let payload = Payload(
             identityToken: identityToken,
+            authorizationCode: authorizationCode,
             fullName: fullName,
             deviceId: await deviceAuth.currentDeviceID()
         )
@@ -199,7 +202,7 @@ actor APIClient {
         await accountAuth?.clearSession()
     }
 
-    /// 注销账号：服务端软删 + 吊销全部会话令牌（Guideline 5.1.1(v)）
+    /// 注销账号：服务端撤销 Apple 授权 + 清除个人信息 + 吊销全部会话令牌（Guideline 5.1.1(v)）
     func deleteAccount() async throws {
         let request = try await makeRequest(path: "/api/account/delete", method: "POST")
         let (data, http) = try await sendWithAuthRetry(request)

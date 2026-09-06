@@ -24,8 +24,6 @@ enum AppError: Error, LocalizedError, Sendable {
     case sourceFileGone
     /// 429 QUOTA_EXCEEDED：当日积分耗尽（tier 由调用方按登录态区分文案）
     case quotaExceeded
-    /// 403 ACCOUNT_DELETED：账号已注销
-    case accountDeleted
     /// 502 上游错误（DASHSCOPE_ERROR / ARK_ERROR）
     case upstream(String)
     /// 其他 HTTP 错误
@@ -44,7 +42,6 @@ enum AppError: Error, LocalizedError, Sendable {
         switch status {
         case 401: self = .unauthorized
         case 400: self = .badRequest(body?.message ?? "")
-        case 403: self = body?.code == "ACCOUNT_DELETED" ? .accountDeleted : .http(status: status, message: body?.message)
         case 404: self = .notFound(body?.message ?? "")
         case 410: self = .sourceFileGone
         case 413: self = .bodyTooLarge
@@ -72,8 +69,6 @@ enum AppError: Error, LocalizedError, Sendable {
             "不可变奏：源图已超过 48 小时保留期被清理。"
         case .quotaExceeded:
             "今日次数已用完，明天零点再来吧。"
-        case .accountDeleted:
-            "该账号已注销。"
         case .upstream(let message):
             "AI 服务暂时不可用，请稍后重试。\(message.isEmpty ? "" : "（\(message)）")"
         case .http(let status, let message):

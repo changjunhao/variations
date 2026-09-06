@@ -9,9 +9,6 @@ import (
 	"time"
 )
 
-// ErrUserDeleted 账号已注销 → 403 ACCOUNT_DELETED
-var ErrUserDeleted = errors.New("账号已注销")
-
 // User SIWA 用户档案（Apple sub 为主键）
 type User struct {
 	ID             string
@@ -30,35 +27,34 @@ func NewUserRepo(db *sql.DB) *UserRepo {
 }
 
 // UpsertUser 登录即注册：已存在则刷新邮箱/活跃时间；full_name 仅首次授权可得，空值不覆盖。
-// 已注销账号（deleted_at 非空）返回 ErrUserDeleted，不允许复活。
+// 已注销账号以同一 Apple sub 再次登录时复活（清 deleted_at），但 created_at 保持首次注册时间——
+// 特权窗口不随注销重开，杜绝「注销→重登」反复刷新用户特权；paid_remaining 一并留存（已购次数不没收）。
 func (r *UserRepo) UpsertUser(ctx context.Context, id, email string, isPrivateEmail bool, fullName string) (*User, error) {
 	now := utcNow()
-	var deleted sql.NullString
-	err := r.db.QueryRowContext(ctx, `SELECT deleted_at FROM users WHERE id = ?`, id).Scan(&deleted)
-	switch {
-	case errors.Is(err, sql.ErrNoRows):
-		if _, err := r.db.ExecContext(ctx,
-			`INSERT INTO users (id, email, is_private_email, full_name, created_at, last_login_at)
-			 VALUES (?, ?, ?, ?, ?, ?)`,
-			id, email, boolInt(isPrivateEmail), fullName, now, now,
-		); err != nil {
-			return nil, fmt.Errorf("写入用户失败: %w", err)
-		}
-	case err != nil:
-		return nil, fmt.Errorf("查询用户失败: %w", err)
-	case deleted.Valid:
-		return nil, ErrUserDeleted
-	default:
-		if _, err := r.db.ExecContext(ctx,
-			`UPDATE users SET email = ?, is_private_email = ?, last_login_at = ?,
-			 full_name = CASE WHEN full_name IS NULL OR full_name = '' THEN ? ELSE full_name END
-			 WHERE id = ?`,
-			email, boolInt(isPrivateEmail), now, fullName, id,
-		); err != nil {
-			return nil, fmt.Errorf("更新用户失败: %w", err)
-		}
+	// 单语句原子 upsert：ON CONFLICT 不触碰 created_at，故复活不重置注册时间
+	if _, err := r.db.ExecContext(ctx,
+		`INSERT INTO users (id, email, is_private_email, full_name, created_at, last_login_at)
+		 VALUES (?, ?, ?, ?, ?, ?)
+		 ON CONFLICT(id) DO UPDATE SET
+		   email = excluded.email,
+		   is_private_email = excluded.is_private_email,
+		   last_login_at = excluded.last_login_at,
+		   deleted_at = NULL,
+		   full_name = CASE WHEN users.full_name IS NULL OR users.full_name = ''
+		                    THEN excluded.full_name ELSE users.full_name END`,
+		id, email, boolInt(isPrivateEmail), fullName, now, now,
+	); err != nil {
+		return nil, fmt.Errorf("写入用户失败: %w", err)
 	}
-	return &User{ID: id, Email: email, IsPrivateEmail: isPrivateEmail, FullName: fullName}, nil
+	// 回读权威行：full_name 可能是首次授权留下的历史值，用入参回填会让再次登录昵称丢失
+	user, err := r.GetUser(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if user == nil {
+		return nil, fmt.Errorf("用户 upsert 后回读为空: %s", id)
+	}
+	return user, nil
 }
 
 // GetUser 读取用户档案（不存在返回 nil, nil）
@@ -113,7 +109,10 @@ func (r *UserRepo) RevokeToken(ctx context.Context, tokenHash string) error {
 	return nil
 }
 
-// DeleteUser 账号注销：软删用户 + 吊销其全部会话令牌（同一事务）
+// DeleteUser 账号注销（Guideline 5.1.1(v)）：清除个人信息（邮箱/昵称/Apple refresh token）
+// + 打注销标记 + 吊销全部会话令牌（同一事务）。
+// 保留 id（Apple sub 为应用内定向标识，不含个人信息）、created_at 与 paid_remaining 作墓碑：
+// 同一 Apple ID 重新登录可复活，特权窗口不重开、已购次数不丢失。
 func (r *UserRepo) DeleteUser(ctx context.Context, userID string) error {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -121,14 +120,41 @@ func (r *UserRepo) DeleteUser(ctx context.Context, userID string) error {
 	}
 	defer func() { _ = tx.Rollback() }()
 	now := utcNow()
-	if _, err := tx.ExecContext(ctx, `UPDATE users SET deleted_at = ? WHERE id = ?`, now, userID); err != nil {
-		return fmt.Errorf("软删用户失败: %w", err)
+	if _, err := tx.ExecContext(ctx,
+		`UPDATE users SET deleted_at = ?, email = NULL, full_name = NULL,
+		 is_private_email = 0, apple_refresh_token = NULL WHERE id = ?`,
+		now, userID); err != nil {
+		return fmt.Errorf("清除用户个人信息失败: %w", err)
 	}
 	if _, err := tx.ExecContext(ctx,
 		`UPDATE auth_tokens SET revoked_at = ? WHERE user_id = ? AND revoked_at IS NULL`, now, userID); err != nil {
 		return fmt.Errorf("吊销会话令牌失败: %w", err)
 	}
 	return tx.Commit()
+}
+
+// ============================== Apple 授权撤销凭据 ==============================
+
+// StoreAppleRefreshToken 落库登录时以 authorizationCode 换得的 refresh_token（注销时撤销授权用）
+func (r *UserRepo) StoreAppleRefreshToken(ctx context.Context, userID, refreshToken string) error {
+	if _, err := r.db.ExecContext(ctx,
+		`UPDATE users SET apple_refresh_token = ? WHERE id = ?`, refreshToken, userID); err != nil {
+		return fmt.Errorf("写入 Apple refresh token 失败: %w", err)
+	}
+	return nil
+}
+
+// AppleRefreshToken 读取 Apple refresh token（空 = 未换取或已随注销清除）
+func (r *UserRepo) AppleRefreshToken(ctx context.Context, userID string) (string, error) {
+	var token sql.NullString
+	if err := r.db.QueryRowContext(ctx,
+		`SELECT apple_refresh_token FROM users WHERE id = ?`, userID).Scan(&token); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return "", nil
+		}
+		return "", fmt.Errorf("查询 Apple refresh token 失败: %w", err)
+	}
+	return token.String, nil
 }
 
 // ============================== 购买余额（次数，永久不失效） ==============================

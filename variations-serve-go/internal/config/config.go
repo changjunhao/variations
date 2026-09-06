@@ -62,6 +62,11 @@ type Config struct {
 	AppleClientID string
 	// SIWA 登录每 IP 每分钟限频
 	AuthApplePerMin int
+	// SIWA 授权撤销（Guideline 5.1.1(v)）：注销账号时调 Apple /auth/revoke 所需的密钥三件套
+	// （TeamID + KeyID + 门户「Sign in with Apple」Key 的 .p8）；未配置则撤销能力关闭
+	AppleTeamID     string
+	AppleKeyID      string
+	ApplePrivateKey string
 
 	// 配额（次数口径）：游客终身体验次数；新用户特权天数与每日次数
 	GuestFreeTotal       int
@@ -163,6 +168,9 @@ func Load(logger *slog.Logger) *Config {
 		AdminToken:           os.Getenv("ADMIN_TOKEN"),
 		AppleClientID:        os.Getenv("APPLE_CLIENT_ID"),
 		AuthApplePerMin:      envInt("AUTH_APPLE_PER_MIN", 10),
+		AppleTeamID:          os.Getenv("APPLE_TEAM_ID"),
+		AppleKeyID:           os.Getenv("APPLE_KEY_ID"),
+		ApplePrivateKey:      loadApplePrivateKey(logger),
 		GuestFreeTotal:       envInt("GUEST_FREE_TOTAL", 1),
 		NewUserPrivilegeDays: envInt("NEW_USER_PRIVILEGE_DAYS", 7),
 		NewUserDaily:         envInt("NEW_USER_DAILY", 10),
@@ -221,10 +229,27 @@ func Load(logger *slog.Logger) *Config {
 	if cfg.AppleClientID == "" {
 		logger.Warn("未配置 APPLE_CLIENT_ID，SIWA 登录端点将返回 503")
 	}
+	if cfg.ApplePrivateKey == "" {
+		logger.Warn("未配置 SIWA 私钥（APPLE_PRIVATE_KEY_PATH / APPLE_PRIVATE_KEY），注销账号时无法撤销 Apple 授权（App Store 5.1.1(v) 要求）")
+	}
 	if len(cfg.IAPProducts) == 0 {
 		logger.Warn("未配置 IAP_PRODUCT_MAP，购买落账端点将返回 503")
 	}
 	return cfg
+}
+
+// loadApplePrivateKey 读取 SIWA Key 的 .p8：APPLE_PRIVATE_KEY_PATH 优先；
+// 否则取 APPLE_PRIVATE_KEY 内联 PEM（systemd EnvironmentFile 不支持换行，故还原 \n 转义）
+func loadApplePrivateKey(logger *slog.Logger) string {
+	if path := strings.TrimSpace(os.Getenv("APPLE_PRIVATE_KEY_PATH")); path != "" {
+		raw, err := os.ReadFile(path)
+		if err != nil {
+			logger.Warn("读取 APPLE_PRIVATE_KEY_PATH 失败，Apple 授权撤销将关闭", "error", err.Error())
+			return ""
+		}
+		return string(raw)
+	}
+	return strings.ReplaceAll(os.Getenv("APPLE_PRIVATE_KEY"), `\n`, "\n")
 }
 
 // parseList 解析逗号分隔列表为集合（STAFF_USER_IDS 等）

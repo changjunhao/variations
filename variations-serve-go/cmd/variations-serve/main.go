@@ -59,8 +59,14 @@ func main() {
 	gate := auth.NewHMACGate(cfg.RegisterSecret)
 	registerHandler := auth.NewRegisterHandler(gate, authRepo, logger)
 	appleVerifier := auth.NewAppleVerifier(cfg.AppleClientID)
-	appleLoginHandler := auth.NewAppleLoginHandler(appleVerifier, userRepo, quotaRepo, cfg, logger)
-	accountHandler := handlers.NewAccountHandler(userRepo, quotaRepo, cfg, logger)
+	// SIWA 授权撤销客户端：密钥未配置则为 nil（撤销关闭，Load 已告警）；私钥非法即启动失败
+	appleTokens, err := auth.NewAppleTokenClient(cfg.AppleClientID, cfg.AppleTeamID, cfg.AppleKeyID, cfg.ApplePrivateKey)
+	if err != nil {
+		logger.Error("SIWA 授权撤销密钥配置无效", "error", err.Error())
+		os.Exit(1)
+	}
+	appleLoginHandler := auth.NewAppleLoginHandler(appleVerifier, appleTokens, userRepo, quotaRepo, cfg, logger)
+	accountHandler := handlers.NewAccountHandler(userRepo, quotaRepo, appleTokens, cfg, logger)
 	signer := oss.NewSigner(cfg.Oss)
 	engine := server.BuildRoutes(cfg, logger, authRepo, quotaRepo, userRepo, server.Handlers{
 		Register:       registerHandler.Handle,

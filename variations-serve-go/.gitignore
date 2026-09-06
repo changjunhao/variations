@@ -5,3 +5,6 @@ data/
 *.db
 *.db-wal
 *.db-shm
+
+# Sign in with Apple 私钥（APPLE_PRIVATE_KEY_PATH 指向的 .p8）
+*.p8

@@ -31,6 +31,8 @@ DerivedData/
 !.env.example
 *.p12
 *.cer
+# Sign in with Apple / App Store Connect 私钥（只能下载一次，泄露即可冒充本 App 调 Apple 接口）
+*.p8
 Secrets.xcconfig
 
 # Node

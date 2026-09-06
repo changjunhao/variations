@@ -19,8 +19,6 @@ const (
 	CodeSourceFileGone = "SOURCE_FILE_GONE"
 	// CodeQuotaExceeded 当日积分配额不足（429）：body 附 quota 详情供客户端展示
 	CodeQuotaExceeded = "QUOTA_EXCEEDED"
-	// CodeAccountDeleted 账号已注销（403）
-	CodeAccountDeleted = "ACCOUNT_DELETED"
 	// CodeAppleTokenInvalid SIWA identityToken 验签失败（401）
 	CodeAppleTokenInvalid = "APPLE_TOKEN_INVALID"
 	// CodeBillingInvalid IAP 票据验签失败（401）

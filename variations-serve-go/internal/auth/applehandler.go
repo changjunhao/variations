@@ -19,20 +19,24 @@ type appleLoginPayload struct {
 	IdentityToken string `json:"identityToken"`
 	// FullName 仅首次授权可得（客户端拼装 "given family"），空值不覆盖
 	FullName string `json:"fullName"`
+	// AuthorizationCode 一次性授权码（5 分钟内有效）：换 refresh_token 存库，
+	// 供注销时撤销 Apple 授权（Guideline 5.1.1(v)）
+	AuthorizationCode string `json:"authorizationCode"`
 }
 
 // AppleLoginHandler POST /api/auth/apple —— SIWA identityToken 验签 → upsert 用户 →
-// 吊销旧会话令牌 → 签发 var_u_ 新令牌（30 天）。已注销账号 403 ACCOUNT_DELETED。
+// 吊销旧会话令牌 → 签发 var_u_ 新令牌（30 天）。已注销账号以同一 Apple ID 登录即复活。
 type AppleLoginHandler struct {
 	verifier *AppleVerifier
+	tokens   *AppleTokenClient
 	users    *store.UserRepo
 	quotas   *store.QuotaRepo
 	cfg      *config.Config
 	logger   *slog.Logger
 }
 
-func NewAppleLoginHandler(verifier *AppleVerifier, users *store.UserRepo, quotas *store.QuotaRepo, cfg *config.Config, logger *slog.Logger) *AppleLoginHandler {
-	return &AppleLoginHandler{verifier: verifier, users: users, quotas: quotas, cfg: cfg, logger: logger.With("scope", "auth")}
+func NewAppleLoginHandler(verifier *AppleVerifier, tokens *AppleTokenClient, users *store.UserRepo, quotas *store.QuotaRepo, cfg *config.Config, logger *slog.Logger) *AppleLoginHandler {
+	return &AppleLoginHandler{verifier: verifier, tokens: tokens, users: users, quotas: quotas, cfg: cfg, logger: logger.With("scope", "auth")}
 }
 
 func (h *AppleLoginHandler) Handle(c *gin.Context) {
@@ -63,13 +67,19 @@ func (h *AppleLoginHandler) Handle(c *gin.Context) {
 
 	user, err := h.users.UpsertUser(c.Request.Context(), identity.Sub, identity.Email, identity.IsPrivateEmail, p.FullName)
 	if err != nil {
-		if errors.Is(err, store.ErrUserDeleted) {
-			httpx.RenderError(c, 403, httpx.CodeAccountDeleted, "该账号已注销")
-			return
-		}
 		h.logger.Error("用户落库失败", "error", err.Error())
 		httpx.RenderError(c, 500, httpx.CodeInternalError, "服务器内部错误")
 		return
+	}
+
+	// 换取并刷新 refresh_token（注销时撤销授权的唯一凭据）：
+	// 失败不阻断登录，仅告警——否则 Apple 授权服务抖动会直接堵死登录入口
+	if p.AuthorizationCode != "" {
+		if refresh, rerr := h.tokens.ExchangeCode(c.Request.Context(), p.AuthorizationCode); rerr != nil {
+			h.logger.Warn("换取 Apple refresh_token 失败（注销时将无法撤销授权）", "userId", user.ID, "error", rerr.Error())
+		} else if serr := h.users.StoreAppleRefreshToken(c.Request.Context(), user.ID, refresh); serr != nil {
+			h.logger.Error("Apple refresh_token 落库失败", "userId", user.ID, "error", serr.Error())
+		}
 	}
 
 	token, err := GenerateUserToken()

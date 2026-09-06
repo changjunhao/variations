@@ -34,7 +34,7 @@ final class AccountQuotaTests: XCTestCase {
         XCTAssertNil(session)
     }
 
-    // MARK: - AppError 配额/注销映射
+    // MARK: - AppError 配额映射
 
     func testQuotaExceededMapping() {
         let body = APIErrorBody(code: "QUOTA_EXCEEDED", message: "今日次数已用完")
@@ -46,11 +46,6 @@ final class AccountQuotaTests: XCTestCase {
         if case .http = AppError(status: 429, body: APIErrorBody(code: "RATE_LIMITED", message: "x")) {
         } else {
             XCTFail("普通 429 应映射 http")
-        }
-        // 注销
-        if case .accountDeleted = AppError(status: 403, body: APIErrorBody(code: "ACCOUNT_DELETED", message: "x")) {
-        } else {
-            XCTFail("403 ACCOUNT_DELETED 应映射 accountDeleted")
         }
     }
 
