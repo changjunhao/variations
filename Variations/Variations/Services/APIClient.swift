@@ -160,7 +160,8 @@ actor APIClient {
     // MARK: - 账号（SIWA 用户系统）
 
     /// 登录：SIWA 系统面板凭据 → POST /api/auth/apple 换发会话令牌（公开端点，不携 Bearer）
-    func loginWithApple(identityToken: String, authorizationCode: String, fullName: String) async throws -> LoginReply {
+    func loginWithApple(identityToken: String, authorizationCode: String, nonce: String,
+                        appleUserID: String, fullName: String) async throws -> LoginReply {
         guard let accountAuth else { throw AppError.notConfigured }
         try await assertConsent()
         let base = await currentBaseURL()
@@ -172,21 +173,25 @@ actor APIClient {
             let identityToken: String
             /// 一次性授权码：服务端据此换 refresh_token，供注销时撤销 Apple 授权（Guideline 5.1.1(v)）
             let authorizationCode: String
+            /// raw nonce：服务端重算 SHA-256 与 token 的 nonce claim 比对（防重放）
+            let nonce: String
             let fullName: String
-            let deviceId: String?
         }
         let payload = Payload(
             identityToken: identityToken,
             authorizationCode: authorizationCode,
-            fullName: fullName,
-            deviceId: await deviceAuth.currentDeviceID()
+            nonce: nonce,
+            fullName: fullName
         )
         request.httpBody = try JSONEncoder().encode(payload)
         let (data, response) = try await send(request)
         guard let http = response as? HTTPURLResponse else { throw AppError.decoding }
         try expectSuccess(http, data)
         let reply = try decode(LoginReply.self, from: data)
-        await accountAuth.storeSession(token: reply.token, session: reply.user)
+        // Apple sub 仅系统面板回传（服务端不下发），在此并入会话供后续查授权状态
+        var session = reply.user
+        session.appleUserID = appleUserID.isEmpty ? nil : appleUserID
+        await accountAuth.storeSession(token: reply.token, session: session)
         return reply
     }
 

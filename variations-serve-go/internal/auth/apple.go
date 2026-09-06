@@ -3,7 +3,9 @@ package auth
 import (
 	"context"
 	"crypto/rsa"
+	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -16,7 +18,8 @@ import (
 )
 
 // Apple identityToken 验签：拉取 Apple JWKS 缓存 24h；kid 未命中时强制刷新重试一次（兼容密钥轮换）。
-// 校验项：RS256、iss=https://appleid.apple.com、aud=APPLE_CLIENT_ID、exp/iat；nonce 本期不强制。
+// 校验项：RS256、iss=https://appleid.apple.com、aud=APPLE_CLIENT_ID、exp；
+// nonce claim 原样提取，与请求携带的 raw nonce 由 handler 比对（防重放）。
 
 const appleJWKSURL = "https://appleid.apple.com/auth/keys"
 
@@ -31,6 +34,8 @@ type AppleIdentity struct {
 	Sub            string
 	Email          string
 	IsPrivateEmail bool
+	// Nonce token 中的 nonce claim（客户端置入的 SHA-256 摘要）；空 = 客户端未使用 nonce
+	Nonce string
 }
 
 type jwkKey struct {
@@ -174,7 +179,15 @@ func (v *AppleVerifier) parse(ctx context.Context, token string, forceRefresh bo
 	case string:
 		isPrivate = p == "true"
 	}
-	return &AppleIdentity{Sub: sub, Email: email, IsPrivateEmail: isPrivate}, nil
+	nonce, _ := claims["nonce"].(string)
+	return &AppleIdentity{Sub: sub, Email: email, IsPrivateEmail: isPrivate, Nonce: nonce}, nil
+}
+
+// NonceDigest raw nonce 的 SHA-256 十六进制摘要：客户端把该摘要放进 request.nonce，
+// raw 值随登录请求上传，服务端在此重算并与 token 的 nonce claim 比对。
+func NonceDigest(raw string) string {
+	sum := sha256.Sum256([]byte(raw))
+	return hex.EncodeToString(sum[:])
 }
 
 // refresh 拉取 JWKS；force=true 跳过 TTL 双检（密钥轮换重试路径）。

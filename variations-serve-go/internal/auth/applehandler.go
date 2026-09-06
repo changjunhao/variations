@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"crypto/hmac"
 	"errors"
 	"log/slog"
 	"time"
@@ -22,6 +23,9 @@ type appleLoginPayload struct {
 	// AuthorizationCode 一次性授权码（5 分钟内有效）：换 refresh_token 存库，
 	// 供注销时撤销 Apple 授权（Guideline 5.1.1(v)）
 	AuthorizationCode string `json:"authorizationCode"`
+	// Nonce 客户端生成的 raw nonce；其 SHA-256 摘要已置入 request.nonce，
+	// 服务端重算并与 token 的 nonce claim 比对（防重放）
+	Nonce string `json:"nonce"`
 }
 
 // AppleLoginHandler POST /api/auth/apple —— SIWA identityToken 验签 → upsert 用户 →
@@ -62,6 +66,15 @@ func (h *AppleLoginHandler) Handle(c *gin.Context) {
 		}
 		h.logger.Warn("JWKS 不可用", "error", err.Error())
 		httpx.RenderError(c, 503, httpx.CodeServiceUnavailable, "登录服务暂不可用")
+		return
+	}
+
+	// 防重放：token 带 nonce claim 时必须验证——否则攻击者只要不传 raw nonce 即可绕过。
+	// token 不带 nonce claim 则放行：旧版客户端（未设 request.nonce）的过渡兼容，
+	// 待带 nonce 的版本覆盖存量安装后可改为硬要求。
+	if identity.Nonce != "" && !hmac.Equal([]byte(identity.Nonce), []byte(NonceDigest(p.Nonce))) {
+		h.logger.Warn("SIWA nonce 不匹配（可能为重放）", "sub", identity.Sub)
+		httpx.RenderError(c, 401, httpx.CodeAppleTokenInvalid, "Apple 登录凭证校验失败")
 		return
 	}
 

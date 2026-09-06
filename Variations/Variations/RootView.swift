@@ -5,6 +5,7 @@
 //  应用骨架：iPhone 自绘胶囊 TabBar（隐藏系统 bar）；iPad regular 走 NavigationSplitView。
 //
 
+import AuthenticationServices
 import SwiftUI
 import SwiftData
 
@@ -39,6 +40,13 @@ struct RootView: View {
             }
         }
         .preferredColorScheme(colorScheme)
+        // Apple 授权可被用户在系统设置里停用：启动补查一次（覆盖离线期间的停用），
+        // 运行中则由系统通知触发，两路均降级为游客
+        .task { await services.syncAppleCredentialState() }
+        .onReceive(NotificationCenter.default.publisher(
+            for: ASAuthorizationAppleIDProvider.credentialRevokedNotification)) { _ in
+            Task { await services.handleAppleCredentialRevoked() }
+        }
         #if DEBUG
         .task { MarketingSeed.seedRecordsIfNeeded(context: modelContext) }
         #endif

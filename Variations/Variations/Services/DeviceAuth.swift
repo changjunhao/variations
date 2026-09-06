@@ -91,7 +91,7 @@ actor DeviceAuth {
         cachedToken = fresh
     }
 
-    /// 当前 deviceId（Apple 登录请求随带；nil = 尚未注册）
+    /// 当前 deviceId（nil = 尚未注册）：凭据存取与注册幂等性的可测入口
     func currentDeviceID() -> String? {
         (try? store.read(Self.deviceIDKey)) ?? nil
     }

@@ -34,6 +34,33 @@ final class AccountQuotaTests: XCTestCase {
         XCTAssertNil(session)
     }
 
+    // MARK: - SIWA nonce 跨端契约
+
+    /// 摘要算法必须与服务端 auth.NonceDigest 逐字节一致，否则登录全部 401。
+    /// 期望值为 sha256("raw-nonce-abc123")，与 Go 端单测取同一常量。
+    func testAppleNonceDigestMatchesServerContract() {
+        XCTAssertEqual(
+            AppleNonce.digest("raw-nonce-abc123"),
+            "835b1ca706560c781e760c508e48479d1d65bff56b7c4ef1551fc1ac222c7e33")
+    }
+
+    /// raw nonce 需为 URL 安全字符（+/= 会在传输与摘要环节埋雷）且每次不同
+    func testAppleNonceRawIsURLSafeAndUnique() {
+        let a = AppleNonce.makeRaw()
+        let b = AppleNonce.makeRaw()
+        XCTAssertNotEqual(a, b, "nonce 必须每次重新生成，否则失去防重放意义")
+        XCTAssertFalse(a.contains("+") || a.contains("/") || a.contains("="))
+        XCTAssertFalse(a.isEmpty)
+    }
+
+    /// 会话编码兼容：旧版本落库的 JSON 无 appleUserID 键，必须能解码为 nil
+    func testAccountSessionDecodesLegacyPayloadWithoutAppleUserID() throws {
+        let legacy = #"{"name":"常 君豪","email":"a@b.c","isPrivateEmail":true}"#
+        let session = try JSONDecoder().decode(AccountSession.self, from: Data(legacy.utf8))
+        XCTAssertNil(session.appleUserID)
+        XCTAssertEqual(session.name, "常 君豪")
+    }
+
     // MARK: - AppError 配额映射
 
     func testQuotaExceededMapping() {

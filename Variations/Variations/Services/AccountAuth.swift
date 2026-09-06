@@ -6,15 +6,38 @@
 //  与 DeviceAuth 同构。401 时由 APIClient 清会话降级游客。
 //
 
+import CryptoKit
 import Foundation
 // KeychainAccess 未做 Sendable 标注；与 DeviceAuth 同口径，@preconcurrency 抑制告警
 @preconcurrency import KeychainAccess
 
-/// 账号档案（服务端 user 摘要）
+/// SIWA 防重放 nonce：request.nonce 放 SHA-256 摘要，raw 值随登录上传由服务端重算比对
+/// （服务端同口径实现见 internal/auth/apple.go 的 NonceDigest）
+nonisolated enum AppleNonce {
+    /// 32 字节 crypto 随机 → base64url（无填充，避开 nonce 中的 +/=）
+    static func makeRaw() -> String {
+        var bytes = [UInt8](repeating: 0, count: 32)
+        _ = SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes)
+        return Data(bytes).base64EncodedString()
+            .replacingOccurrences(of: "+", with: "-")
+            .replacingOccurrences(of: "/", with: "_")
+            .replacingOccurrences(of: "=", with: "")
+    }
+
+    /// SHA-256 十六进制摘要（置入 request.nonce）
+    static func digest(_ raw: String) -> String {
+        SHA256.hash(data: Data(raw.utf8)).map { String(format: "%02x", $0) }.joined()
+    }
+}
+
+/// 账号档案（服务端 user 摘要 + 本地记录的 Apple 用户标识）
 nonisolated struct AccountSession: Codable, Sendable, Equatable {
     let name: String
     let email: String
     let isPrivateEmail: Bool
+    /// Apple sub（credential.user）：用于冷启动时 getCredentialState 查授权是否被用户停用。
+    /// 可选：服务端不返回此字段，且旧版本落库的会话无此键（解码为 nil，跳过检查）
+    var appleUserID: String?
 }
 
 /// 账号凭据存储抽象：真机用 Keychain（service 按环境隔离），单测注入内存版

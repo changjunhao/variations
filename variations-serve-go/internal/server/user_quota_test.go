@@ -11,6 +11,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 
+	"variations-serve-go/internal/auth"
 	"variations-serve-go/internal/config"
 	"variations-serve-go/internal/store"
 )
@@ -34,6 +35,11 @@ func (staticKeySource) Fetch(context.Context) (map[string]*rsa.PublicKey, error)
 
 // signAppleToken 伪造 Apple identityToken（iss/aud/kid 与验签器约定一致）
 func signAppleToken(t *testing.T, sub, email string) string {
+	return signAppleTokenWithNonce(t, sub, email, "")
+}
+
+// signAppleTokenWithNonce nonceDigest 非空时写入 nonce claim（模拟客户端设了 request.nonce）
+func signAppleTokenWithNonce(t *testing.T, sub, email, nonceDigest string) string {
 	t.Helper()
 	claims := jwt.MapClaims{
 		"sub":   sub,
@@ -42,6 +48,9 @@ func signAppleToken(t *testing.T, sub, email string) string {
 		"email": email,
 		"exp":   time.Now().Add(time.Hour).Unix(),
 		"iat":   time.Now().Unix(),
+	}
+	if nonceDigest != "" {
+		claims["nonce"] = nonceDigest
 	}
 	tok := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
 	tok.Header["kid"] = "test-kid"
@@ -199,6 +208,44 @@ func TestAppleLoginInvalidToken(t *testing.T) {
 	w = do(t, env.engine, "POST", "/api/auth/apple", `{}`, "")
 	if w.Code != 400 {
 		t.Fatalf("缺参应 400: %d", w.Code)
+	}
+}
+
+// nonce 防重放：token 带 nonce claim 时，请求必须携带能对上摘要的 raw nonce。
+// 尤其需要钉住「不传 nonce 字段即可绕过」这个绕过面。
+func TestAppleLoginNonceReplayProtection(t *testing.T) {
+	env := newTestEnv(t)
+	raw := "raw-nonce-abc123"
+	token := signAppleTokenWithNonce(t, "apple-sub-nonce", "a@b.c", auth.NonceDigest(raw))
+
+	login := func(body map[string]string) int {
+		payload, _ := json.Marshal(body)
+		return do(t, env.engine, "POST", "/api/auth/apple", string(payload), "").Code
+	}
+
+	// 缺 nonce 字段 → 401（不可省略绕过）
+	if code := login(map[string]string{"identityToken": token}); code != 401 {
+		t.Fatalf("token 带 nonce 而请求不传应 401: %d", code)
+	}
+	// nonce 不匹配 → 401
+	if code := login(map[string]string{"identityToken": token, "nonce": "wrong-nonce"}); code != 401 {
+		t.Fatalf("nonce 不匹配应 401: %d", code)
+	}
+	// nonce 匹配 → 200
+	if code := login(map[string]string{"identityToken": token, "nonce": raw}); code != 200 {
+		t.Fatalf("nonce 匹配应 200: %d", code)
+	}
+}
+
+// 过渡兼容：旧版客户端不设 request.nonce，token 无 nonce claim，不传 nonce 仍应能登录
+// （否则发版当日存量安装全部登不上）
+func TestAppleLoginWithoutNonceStillWorks(t *testing.T) {
+	env := newTestEnv(t)
+	payload, _ := json.Marshal(map[string]string{
+		"identityToken": signAppleToken(t, "apple-sub-legacy", "a@b.c"),
+	})
+	if w := do(t, env.engine, "POST", "/api/auth/apple", string(payload), ""); w.Code != 200 {
+		t.Fatalf("旧版客户端（无 nonce）应仍可登录: %d %s", w.Code, w.Body.String())
 	}
 }
 

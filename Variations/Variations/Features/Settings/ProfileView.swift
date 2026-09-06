@@ -26,6 +26,8 @@ struct ProfileView: View {
     @State private var accountBusy = false
     @State private var accountNotice: String?
     @State private var showPaywall = false
+    /// 本次授权的 raw nonce（request 闭包生成 → onCompletion 随登录上传）
+    @State private var nonceRaw = ""
 
     var body: some View {
         ScrollView {
@@ -99,6 +101,10 @@ struct ProfileView: View {
         }
         .sheet(isPresented: $showServer) { serverSheet }
         .sheet(isPresented: $showPaywall) { PaywallSheet() }
+        // Apple 授权被停用而降级游客时，本页可能正停留在前台，需重读会话避免停在已登录假象
+        .onChange(of: services.accountRevision) {
+            Task { session = await services.accountAuth.currentSession() }
+        }
         .alert("服务器地址需为 https，或本机 localhost/局域网调试地址", isPresented: $serverInvalid) {}
         .alert(accountNotice ?? "", isPresented: .constant(accountNotice != nil)) {
             Button("好") { accountNotice = nil }
@@ -132,6 +138,10 @@ struct ProfileView: View {
 
             SignInWithAppleButton(.signIn) { request in
                 request.requestedScopes = [.fullName, .email]
+                // 防重放：面板只拿得摘要，raw 值留在本地随登录上传供服务端比对
+                let raw = AppleNonce.makeRaw()
+                nonceRaw = raw
+                request.nonce = AppleNonce.digest(raw)
             } onCompletion: { result in
                 switch result {
                 case .success(let authorization):
@@ -148,6 +158,7 @@ struct ProfileView: View {
                         .flatMap { String(data: $0, encoding: .utf8) } ?? ""
                     exchangeLogin(identityToken: identityToken,
                                   authorizationCode: authorizationCode,
+                                  appleUserID: credential.user,
                                   fullName: fullName)
                 case .failure(let error):
                     // 用户取消静默；系统级失败（如 iOS 26 SIWA 回归致面板报 Sign Up Not Completed）
@@ -352,7 +363,8 @@ struct ProfileView: View {
     // MARK: - 动作
 
     /// 系统 SIWA 面板凭据 → POST /api/auth/apple 换发会话令牌
-    private func exchangeLogin(identityToken: String, authorizationCode: String, fullName: String) {
+    private func exchangeLogin(identityToken: String, authorizationCode: String,
+                               appleUserID: String, fullName: String) {
         guard !accountBusy else { return }
         accountBusy = true
         Task {
@@ -361,8 +373,11 @@ struct ProfileView: View {
                 let reply = try await services.api.loginWithApple(
                     identityToken: identityToken,
                     authorizationCode: authorizationCode,
+                    nonce: nonceRaw,
+                    appleUserID: appleUserID,
                     fullName: fullName)
-                session = reply.user
+                // 从存储回读：服务端响应不包含 appleUserID，Keychain 里的才是完整会话
+                session = await services.accountAuth.currentSession() ?? reply.user
                 services.quotaStore.apply(reply.quota)
             } catch let error as AppError {
                 accountNotice = error.errorDescription
