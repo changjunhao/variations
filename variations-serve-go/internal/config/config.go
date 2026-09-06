@@ -76,9 +76,9 @@ type Config struct {
 	GuestDailyCompileCap int
 	UserDailyCompileCap  int
 
-	// IAP：productID → 落账次数；IAPEnvironment 校验票据环境（Production|Sandbox）
-	IAPProducts    map[string]int
-	IAPEnvironment string
+	// IAP：productID → 落账次数；IAPEnvironments 票据环境白名单（小写键：production / sandbox）
+	IAPProducts     map[string]int
+	IAPEnvironments map[string]bool
 
 	// Staff 白名单：Apple sub 列表，命中者生图不扣减（开发者自用，仅服务端生效）
 	StaffUserIDs map[string]bool
@@ -177,7 +177,7 @@ func Load(logger *slog.Logger) *Config {
 		GuestDailyCompileCap: envInt("GUEST_DAILY_COMPILE_CAP", 20),
 		UserDailyCompileCap:  envInt("USER_DAILY_COMPILE_CAP", 100),
 		IAPProducts:          parseIAPProductMap(os.Getenv("IAP_PRODUCT_MAP")),
-		IAPEnvironment:       envOr("IAP_ENVIRONMENT", "Production"),
+		IAPEnvironments:      parseIAPEnvironments(os.Getenv("IAP_ENVIRONMENT")),
 		StaffUserIDs:         parseList(os.Getenv("STAFF_USER_IDS")),
 		AssetsDir:            os.Getenv("ASSETS_DIR"),
 		DBPath:               envOr("DB_PATH", "./data/variations.db"),
@@ -289,4 +289,22 @@ func envOr(name, fallback string) string {
 		return v
 	}
 	return fallback
+}
+
+// parseIAPEnvironments 解析票据环境白名单（逗号分隔，大小写不敏感，存小写键）。
+// 缺省同时接受 Production 与 Sandbox：TestFlight 与 App Review 的交易 environment 均为 Sandbox，
+// 只收 Production 会让内测期与审核期的购买全部 401。
+// 安全边界不在此字段：Apple 根证书链验签 + bundleId 校验 + transactionId 幂等才是防伪基础，
+// 且沙盒测试账号只能由本团队 App Store Connect 创建，外部无法为本 bundle 产出沙盒票据。
+func parseIAPEnvironments(raw string) map[string]bool {
+	out := map[string]bool{}
+	for _, item := range strings.Split(raw, ",") {
+		if v := strings.ToLower(strings.TrimSpace(item)); v != "" {
+			out[v] = true
+		}
+	}
+	if len(out) == 0 {
+		return map[string]bool{"production": true, "sandbox": true}
+	}
+	return out
 }

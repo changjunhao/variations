@@ -73,6 +73,8 @@ func newTestEnvWith(t *testing.T, mutate func(*config.Config)) *testEnv {
 		GuestFreeTotal: 1, NewUserPrivilegeDays: 7, NewUserDaily: 10,
 		GuestDailyCompileCap: 20, UserDailyCompileCap: 100,
 		IAPProducts: map[string]int{"test.pack.small": 10},
+		// 票据环境白名单与生产缺省同口径（Production + Sandbox）
+		IAPEnvironments: map[string]bool{"production": true, "sandbox": true},
 	}
 	if mutate != nil {
 		mutate(cfg)

@@ -48,7 +48,7 @@ type TransactionInfo struct {
 }
 
 // VerifyTransactionJWS 校验 StoreKit JWS：alg=ES256；x5c 证书链验证至信任根；
-// 叶子公钥验签；bundleId/environment 与配置匹配。离线完成，无外部依赖。
+// 叶子公钥验签；bundleId 与 environment 在允许集合内。离线完成，无外部依赖。
 // JWSVerifier 信任根可注入（生产用内嵌 Apple Root G3，测试用自签根）
 type JWSVerifier struct {
 	roots *x509.CertPool
@@ -64,7 +64,7 @@ func NewJWSVerifier(rootPEM string) *JWSVerifier {
 // NewAppleJWSVerifier 生产验签器：内嵌 Apple Root CA - G3
 func NewAppleJWSVerifier() *JWSVerifier { return NewJWSVerifier(appleRootG3PEM) }
 
-func (v *JWSVerifier) Verify(jws, expectBundle, expectEnv string) (*TransactionInfo, error) {
+func (v *JWSVerifier) Verify(jws, expectBundle string, allowedEnvs map[string]bool) (*TransactionInfo, error) {
 	parts := strings.Split(jws, ".")
 	if len(parts) != 3 {
 		return nil, ErrJWSInvalid
@@ -145,8 +145,8 @@ func (v *JWSVerifier) Verify(jws, expectBundle, expectEnv string) (*TransactionI
 	if expectBundle != "" && info.BundleID != expectBundle {
 		return nil, fmt.Errorf("%w: bundleId 不符", ErrJWSInvalid)
 	}
-	if expectEnv != "" && !strings.EqualFold(info.Environment, expectEnv) {
-		return nil, fmt.Errorf("%w: environment 不符", ErrJWSInvalid)
+	if len(allowedEnvs) > 0 && !allowedEnvs[strings.ToLower(info.Environment)] {
+		return nil, fmt.Errorf("%w: environment %q 不在允许集合", ErrJWSInvalid, info.Environment)
 	}
 	return &info, nil
 }

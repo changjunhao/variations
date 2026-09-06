@@ -48,7 +48,7 @@ func (h *BillingHandler) Confirm(c *gin.Context) {
 		return
 	}
 
-	info, err := h.verifier.Verify(p.JWS, h.cfg.AppleClientID, h.cfg.IAPEnvironment)
+	info, err := h.verifier.Verify(p.JWS, h.cfg.AppleClientID, h.cfg.IAPEnvironments)
 	if err != nil {
 		// 开发期完整记录验签失败原因与票据，便于定位链/签名/claims 问题
 		h.logger.Warn("票据验签失败", "error", err.Error(), "jws", p.JWS)

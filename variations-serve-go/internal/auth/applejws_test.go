@@ -92,7 +92,8 @@ func TestVerifyTransactionJWS(t *testing.T) {
 	jws := signTestJWS(t, leafKey, leafDER, payload)
 
 	v := NewJWSVerifier(rootPEM)
-	info, err := v.Verify(jws, "cn.ifable.Variations", "Sandbox")
+	bothEnvs := map[string]bool{"production": true, "sandbox": true}
+	info, err := v.Verify(jws, "cn.ifable.Variations", bothEnvs)
 	if err != nil {
 		t.Fatalf("验签应通过: %v", err)
 	}
@@ -101,20 +102,24 @@ func TestVerifyTransactionJWS(t *testing.T) {
 	}
 
 	// bundleId 不符 → 拒绝
-	if _, err := v.Verify(jws, "other.bundle", "Sandbox"); err == nil {
+	if _, err := v.Verify(jws, "other.bundle", bothEnvs); err == nil {
 		t.Fatal("bundleId 不符应拒绝")
 	}
-	// environment 不符 → 拒绝
-	if _, err := v.Verify(jws, "cn.ifable.Variations", "Production"); err == nil {
+	// environment 不在允许集合 → 拒绝
+	if _, err := v.Verify(jws, "cn.ifable.Variations", map[string]bool{"production": true}); err == nil {
 		t.Fatal("environment 不符应拒绝")
+	}
+	// 空集合 → 不门禁 environment（单测与本地调试用）
+	if _, err := v.Verify(jws, "cn.ifable.Variations", nil); err != nil {
+		t.Fatalf("空集合不应门禁 environment: %v", err)
 	}
 	// 篡改 payload → 签名失败
 	tampered := jws[:len(jws)-6] + "AAAAAA"
-	if _, err := v.Verify(tampered, "cn.ifable.Variations", "Sandbox"); err == nil {
+	if _, err := v.Verify(tampered, "cn.ifable.Variations", bothEnvs); err == nil {
 		t.Fatal("篡改签名应拒绝")
 	}
 	// 垃圾输入 → 拒绝
-	if _, err := v.Verify("garbage", "cn.ifable.Variations", "Sandbox"); err == nil {
+	if _, err := v.Verify("garbage", "cn.ifable.Variations", bothEnvs); err == nil {
 		t.Fatal("垃圾输入应拒绝")
 	}
 }
