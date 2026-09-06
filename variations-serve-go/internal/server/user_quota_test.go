@@ -103,14 +103,27 @@ func TestAppleLoginQuotaAndDelete(t *testing.T) {
 		t.Fatalf("quota tier 应为 user: %s", w.Body.String())
 	}
 
-	// 再次登录换发：旧令牌吊销
+	// 再次登录（另一台设备）：旧令牌必须仍然可用——iPhone 与 iPad 需同时在线
 	token2, _ := appleLogin(t, env, signAppleToken(t, "apple-sub-1", "relay@privaterelay.appleid.com"))
-	w = do(t, env.engine, "GET", "/api/quota", "", token)
-	if w.Code != 401 {
-		t.Fatalf("换发后旧令牌应 401: %d", w.Code)
+	if w = do(t, env.engine, "GET", "/api/quota", "", token); w.Code != 200 {
+		t.Fatalf("新设备登录不得踢下旧设备: %d", w.Code)
+	}
+	if w = do(t, env.engine, "GET", "/api/quota", "", token2); w.Code != 200 {
+		t.Fatalf("新令牌应可用: %d", w.Code)
 	}
 
-	// 注销账号：令牌失效、个人信息被清
+	// 退出登录只影响当前设备，另一台仍在线
+	if w = do(t, env.engine, "POST", "/api/auth/logout", "", token); w.Code != 200 {
+		t.Fatalf("退出应 200: %d", w.Code)
+	}
+	if w = do(t, env.engine, "GET", "/api/quota", "", token); w.Code != 401 {
+		t.Fatalf("退出后本设备令牌应 401: %d", w.Code)
+	}
+	if w = do(t, env.engine, "GET", "/api/quota", "", token2); w.Code != 200 {
+		t.Fatalf("单设备退出不得踢下其他设备: %d", w.Code)
+	}
+
+	// 注销账号：全部设备令牌失效、个人信息被清
 	w = do(t, env.engine, "POST", "/api/account/delete", "", token2)
 	if w.Code != 200 {
 		t.Fatalf("注销应 200: %d %s", w.Code, w.Body.String())

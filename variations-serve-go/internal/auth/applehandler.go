@@ -29,7 +29,7 @@ type appleLoginPayload struct {
 }
 
 // AppleLoginHandler POST /api/auth/apple —— SIWA identityToken 验签 → upsert 用户 →
-// 吊销旧会话令牌 → 签发 var_u_ 新令牌（30 天）。已注销账号以同一 Apple ID 登录即复活。
+// 签发 var_u_ 会话令牌（30 天，多设备并存）。已注销账号以同一 Apple ID 登录即复活。
 type AppleLoginHandler struct {
 	verifier *AppleVerifier
 	tokens   *AppleTokenClient
@@ -101,12 +101,8 @@ func (h *AppleLoginHandler) Handle(c *gin.Context) {
 		httpx.RenderError(c, 500, httpx.CodeInternalError, "服务器内部错误")
 		return
 	}
-	// 换发：先吊销旧会话令牌再签发新令牌（同设备多端收敛为单会话）
-	if err := h.users.RevokeUserTokens(c.Request.Context(), user.ID); err != nil {
-		h.logger.Error("吊销旧会话令牌失败", "error", err.Error())
-		httpx.RenderError(c, 500, httpx.CodeInternalError, "服务器内部错误")
-		return
-	}
+	// 不吊销该用户的其他会话令牌：多设备（iPhone + iPad）需同时在线。
+	// 配额按 user 主体计，与令牌数量无关；退出登录只吊销当前令牌，注销账号才吊销全部。
 	expiresAt := time.Now().Add(sessionTTL).UTC().Format(time.RFC3339)
 	if err := h.users.IssueSessionToken(c.Request.Context(), HashToken(token), user.ID, expiresAt); err != nil {
 		h.logger.Error("会话令牌落库失败", "error", err.Error())

@@ -89,17 +89,7 @@ func (r *UserRepo) IssueSessionToken(ctx context.Context, tokenHash, userID, exp
 	return nil
 }
 
-// RevokeUserTokens 吊销该用户全部会话令牌（登录换发/注销时调用）
-func (r *UserRepo) RevokeUserTokens(ctx context.Context, userID string) error {
-	if _, err := r.db.ExecContext(ctx,
-		`UPDATE auth_tokens SET revoked_at = ? WHERE user_id = ? AND revoked_at IS NULL`,
-		utcNow(), userID); err != nil {
-		return fmt.Errorf("吊销会话令牌失败: %w", err)
-	}
-	return nil
-}
-
-// RevokeToken 吊销单个令牌（退出登录）
+// RevokeToken 吊销单个令牌（退出登录；只影响当前设备，其他设备保持在线）
 func (r *UserRepo) RevokeToken(ctx context.Context, tokenHash string) error {
 	if _, err := r.db.ExecContext(ctx,
 		`UPDATE auth_tokens SET revoked_at = ? WHERE token_hash = ? AND revoked_at IS NULL`,
