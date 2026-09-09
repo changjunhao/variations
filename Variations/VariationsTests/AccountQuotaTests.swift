@@ -131,13 +131,17 @@ final class AccountQuotaTests: XCTestCase {
     func testConsentStateTransitions() {
         let defaults = UserDefaults(suiteName: "consent-test")!
         defaults.removeObject(forKey: "privacyConsentState")
+        defaults.removeObject(forKey: "aiSharingConsentVersion")
+        defaults.removeObject(forKey: "aiSharingConsentGrantedAt")
         let store = ConsentStore(defaults: defaults)
         XCTAssertFalse(store.decided)
         XCTAssertFalse(store.hasConsented)
+        XCTAssertFalse(store.hasAISharingConsent)
 
         store.decline()
         XCTAssertTrue(store.decided)
         XCTAssertFalse(store.hasConsented)
+        XCTAssertFalse(store.hasAISharingConsent)
 
         // 持久化：新实例读取
         let reloaded = ConsentStore(defaults: defaults)
@@ -146,6 +150,27 @@ final class AccountQuotaTests: XCTestCase {
         reloaded.consent()
         XCTAssertTrue(reloaded.hasConsented)
         XCTAssertTrue(ConsentStore(defaults: defaults).hasConsented)
+        // 基础同意 ≠ AI 共享授权：必须显式 grantAISharing 才允许照片/提示词离开设备
+        XCTAssertFalse(ConsentStore(defaults: defaults).hasAISharingConsent)
+
+        store.grantAISharing()
+        // 基础同意尚未取得：AI 共享授权不能单独生效
+        XCTAssertFalse(store.hasAISharingConsent)
+        store.consent()
+        XCTAssertTrue(store.hasAISharingConsent)
+        XCTAssertNotNil(store.aiSharingGrantedAt)
+        // 持久化：新实例读取 AI 共享授权版本与时间戳
+        let reloaded2 = ConsentStore(defaults: defaults)
+        XCTAssertTrue(reloaded2.hasAISharingConsent)
+        XCTAssertNotNil(reloaded2.aiSharingGrantedAt)
+
+        store.revokeAISharing()
+        XCTAssertFalse(store.hasAISharingConsent)
+        XCTAssertNil(store.aiSharingGrantedAt)
+        XCTAssertTrue(ConsentStore(defaults: defaults).hasConsented) // 基础同意不受撤回影响
+
         defaults.removeObject(forKey: "privacyConsentState")
+        defaults.removeObject(forKey: "aiSharingConsentVersion")
+        defaults.removeObject(forKey: "aiSharingConsentGrantedAt")
     }
 }

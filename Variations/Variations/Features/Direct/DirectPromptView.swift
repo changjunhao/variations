@@ -4,6 +4,7 @@
 //
 //  直接输入（设计稿 09）：提示词 + 载入提示词模版 + 附图≤3（无图=文生图）。
 //  附图压缩后直传 OSS，生成时以 bucket 签名 URL 作参考图。
+//  附图前与开始变奏前均须就「第三方 AI 数据共享」取得单独授权（Guideline 5.1.1(i) / 5.1.2(i)）。
 //
 
 import SwiftUI
@@ -26,6 +27,9 @@ struct DirectPromptView: View {
     @State private var pickerItems: [PhotosPickerItem] = []
     @State private var attachments: [Attachment] = []
     @State private var errorMessage: String?
+    /// 附图前 AI 共享授权闸门：未授权时先展示披露页，取得授权后再打开 PhotosPicker
+    @State private var showAIGate = false
+    @State private var pickerPresented = false
 
     struct Attachment: Identifiable {
         let id = UUID()
@@ -66,7 +70,11 @@ struct DirectPromptView: View {
                         .foregroundStyle(Theme.textSecondary)
                 }
                 PrimaryButton(title: "开始变奏", enabled: !text.isEmpty && !isBusy && !services.quotaStore.exhausted) {
-                    start()
+                    if services.consent.hasAISharingConsent {
+                        start()
+                    } else {
+                        showAIGate = true
+                    }
                 }
             }
             .padding(.horizontal, 20)
@@ -77,6 +85,16 @@ struct DirectPromptView: View {
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showPresets) { presetSheet }
         .sheet(isPresented: $showSavePreset) { savePresetSheet }
+        .sheet(isPresented: $showAIGate) {
+            AIDataSharingConsentSheet {
+                // 授权后继续原动作：若有附图待选则打开相册，否则直接开始变奏
+                if attachments.count < 3 {
+                    pickerPresented = true
+                } else {
+                    start()
+                }
+            }
+        }
         .onChange(of: pickerItems) { _, items in
             Task { await ingest(items) }
         }
@@ -141,12 +159,20 @@ struct DirectPromptView: View {
                         }
                 }
                 if attachments.count < 3 {
-                    PhotosPicker(selection: $pickerItems, maxSelectionCount: 3 - attachments.count, matching: .images) {
+                    Button {
+                        if services.consent.hasAISharingConsent {
+                            pickerPresented = true
+                        } else {
+                            showAIGate = true
+                        }
+                    } label: {
                         RoundedRectangle(cornerRadius: 8)
                             .strokeBorder(Theme.textSecondary.opacity(0.4), style: StrokeStyle(lineWidth: 1, dash: [4]))
                             .frame(width: 64, height: 64)
                             .overlay(Image(systemName: "plus").foregroundStyle(Theme.textSecondary))
                     }
+                    .buttonStyle(.plain)
+                    .photosPicker(isPresented: $pickerPresented, selection: $pickerItems, maxSelectionCount: 3 - attachments.count, matching: .images)
                 }
             }
         }

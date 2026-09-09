@@ -77,6 +77,7 @@ actor APIClient {
     /// hash 为最终上传字节的 SHA-256（小写 hex）：服务端据此生成内容寻址对象键 uploads/{hash}.{ext}。
     /// fileUrl 签名有效期 ≤2h（对象本身 48h 后由生命周期清理），超期后经 fileURL 重签，不依赖长效签名
     func uploadTicket(ext: String = "jpg", hash: String) async throws -> UploadTicket {
+        try await assertAISharingConsent()
         let request = try await makeRequest(path: "/api/upload-ticket?ext=\(ext)&hash=\(hash)", method: "GET")
         let (data, http) = try await sendWithAuthRetry(request)
         try expectSuccess(http, data)
@@ -124,6 +125,7 @@ actor APIClient {
             imageUrl: imageUrl,
             instruction: instruction.isEmpty ? nil : instruction
         )
+        try await assertAISharingConsent()
         let request = try await makeRequest(path: "/api/compile", method: "POST", json: payload)
         let (data, http) = try await sendWithAuthRetry(request)
         try expectSuccess(http, data)
@@ -151,6 +153,7 @@ actor APIClient {
             negativePrompt: negativePrompt,
             skillId: skillId
         )
+        try await assertAISharingConsent()
         let request = try await makeRequest(path: "/api/image", method: "POST", json: payload)
         let (data, http) = try await sendWithAuthRetry(request)
         try expectSuccess(http, data)
@@ -243,6 +246,15 @@ actor APIClient {
     private func assertConsent() throws {
         if let consent, !consent.hasConsented {
             throw AppError.consentRequired
+        }
+    }
+
+    /// 第三方 AI 数据共享闸门：照片/提示词离开设备前必须单独取得授权（Guideline 5.1.1(i) / 5.1.2(i)）
+    @MainActor
+    private func assertAISharingConsent() throws {
+        try assertConsent()
+        if let consent, !consent.hasAISharingConsent {
+            throw AppError.aiSharingRequired
         }
     }
 

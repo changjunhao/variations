@@ -12,6 +12,8 @@ enum AppError: Error, LocalizedError, Sendable {
     case notConfigured
     /// 隐私政策未同意：网络操作被闸门拦截
     case consentRequired
+    /// 第三方 AI 数据共享未授权：照片/提示词不得离开设备
+    case aiSharingRequired
     /// 401
     case unauthorized
     /// 400（附后端 message）
@@ -57,6 +59,8 @@ enum AppError: Error, LocalizedError, Sendable {
             "尚未配置服务器地址，请到「设置」填写。"
         case .consentRequired:
             "需先同意《隐私政策》才能使用该功能。"
+        case .aiSharingRequired:
+            "需先授权「第三方 AI 数据共享」才能发送照片与提示词。可在「我的 → 第三方 AI 数据共享」中查看与撤回。"
         case .unauthorized:
             "设备身份校验失败，请重试（将自动重新注册）。"
         case .badRequest(let message):

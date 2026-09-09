@@ -28,6 +28,8 @@ struct ProfileView: View {
     @State private var showPaywall = false
     /// 本次授权的 raw nonce（request 闭包生成 → onCompletion 随登录上传）
     @State private var nonceRaw = ""
+    /// 隐私与数据分组：第三方 AI 数据共享授权 Sheet（查看/撤回/重新授权）
+    @State private var showAISharing = false
 
     var body: some View {
         ScrollView {
@@ -69,6 +71,15 @@ struct ProfileView: View {
                     .onTapGesture { clearCache() }
                 }
 
+                // 隐私与数据：政策入口 + 第三方 AI 数据共享授权状态（查看/撤回）
+                group {
+                    privacyRow("隐私政策", url: AIDataSharingDisclosure.privacyURL)
+                    divider
+                    privacyRow("用户协议", url: AIDataSharingDisclosure.termsURL)
+                    divider
+                    aiSharingRow
+                }
+
                 HStack {
                     Text("版本").foregroundStyle(Theme.textPrimary)
                     Spacer()
@@ -101,6 +112,7 @@ struct ProfileView: View {
         }
         .sheet(isPresented: $showServer) { serverSheet }
         .sheet(isPresented: $showPaywall) { PaywallSheet() }
+        .sheet(isPresented: $showAISharing) { AIDataSharingConsentSheet() }
         // Apple 授权被停用而降级游客时，本页可能正停留在前台，需重读会话避免停在已登录假象
         .onChange(of: services.accountRevision) {
             Task { session = await services.accountAuth.currentSession() }
@@ -325,6 +337,43 @@ struct ProfileView: View {
             .padding(.vertical, 16)
         }
         .buttonStyle(.plain)
+    }
+
+    /// 政策外链：点击用系统浏览器打开（不走 openURL 环境值，保证与「我的」页其他行视觉一致）
+    private func privacyRow(_ title: String, url: URL) -> some View {
+        Button { UIApplication.shared.open(url) } label: {
+            HStack {
+                Text(title).foregroundStyle(Theme.textPrimary)
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12))
+                    .foregroundStyle(Theme.textSecondary.opacity(0.6))
+            }
+            .font(.system(size: 15))
+            .padding(.horizontal, 14)
+            .padding(.vertical, 16)
+        }
+        .buttonStyle(.plain)
+    }
+
+    /// 第三方 AI 数据共享：点击打开授权 Sheet（已授权态展示撤回；未授权态展示授权）
+    private var aiSharingRow: some View {
+        Button { showAISharing = true } label: {
+            HStack {
+                Text("第三方 AI 数据共享").foregroundStyle(Theme.textPrimary)
+                Spacer()
+                Text(services.consent.hasAISharingConsent ? "已授权" : "未授权")
+                    .foregroundStyle(services.consent.hasAISharingConsent ? Theme.textSecondary : Theme.primary)
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12))
+                    .foregroundStyle(Theme.textSecondary.opacity(0.6))
+            }
+            .font(.system(size: 15))
+            .padding(.horizontal, 14)
+            .padding(.vertical, 16)
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("aiSharingEntry")
     }
 
     // MARK: - Sheets

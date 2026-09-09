@@ -5,6 +5,10 @@
 //  首次启动隐私同意页（设计稿 14 · ConsentGate）：同意前不发起任何网络请求。
 //  不同意不退出 App——保持可浏览，网络操作就地提示。
 //
+//  除基础政策同意外，本页同时给出「第三方 AI 数据共享」摘要披露
+//  （App Store Guideline 5.1.1(i) / 5.1.2(i)）；照片/提示词发送到第三方 AI
+//  的单独授权在首次发起变奏前再请求一次，授权页与本页共享同一份披露文案。
+//
 
 import SwiftUI
 
@@ -16,10 +20,13 @@ struct ConsentGateView: View {
     private static let termsURL = URL(string: "https://variations.ifable.cn/terms")!
     private static let privacyURL = URL(string: "https://variations.ifable.cn/privacy")!
 
+    /// 展开「第三方 AI 数据共享」摘要披露
+    @State private var showAISharing = false
+
     var body: some View {
         VStack(spacing: 0) {
             Spacer()
-            VStack(spacing: 24) {
+            VStack(spacing: 20) {
                 Text("Variations")
                     .font(Theme.Fonts.serifItalic(34))
                     .foregroundStyle(Theme.textPrimary)
@@ -28,6 +35,9 @@ struct ConsentGateView: View {
                     .lineSpacing(9)
                     .multilineTextAlignment(.center)
                     .foregroundStyle(Theme.textSecondary)
+
+                aiSummaryCard
+
                 HStack(spacing: 8) {
                     link("《用户协议》", Self.termsURL)
                     Text("·").foregroundStyle(Theme.textSecondary)
@@ -64,6 +74,45 @@ struct ConsentGateView: View {
             .padding(.bottom, 32)
         }
         .background(Theme.background)
+        .sheet(isPresented: $showAISharing) {
+            AIDataSharingConsentSheet()
+        }
+    }
+
+    // MARK: - 第三方 AI 摘要卡
+
+    private var aiSummaryCard: some View {
+        Button { showAISharing = true } label: {
+            VStack(alignment: .leading, spacing: 10) {
+                Label("第三方 AI 数据共享", systemImage: "brain.head.profile")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(Theme.primary)
+                Text(AIDataSharingDisclosure.summary)
+                    .font(.system(size: 13))
+                    .lineSpacing(5)
+                    .foregroundStyle(Theme.textSecondary)
+                    .multilineTextAlignment(.leading)
+                HStack(spacing: 4) {
+                    Text("查看完整说明")
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 11, weight: .semibold))
+                }
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(Theme.primary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(14)
+            .background(
+                RoundedRectangle(cornerRadius: Theme.Radius.card)
+                    .fill(Theme.card)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: Theme.Radius.card)
+                            .strokeBorder(Theme.primary.opacity(0.25))
+                    )
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("aiSharingSummary")
     }
 
     private func link(_ title: String, _ url: URL) -> some View {

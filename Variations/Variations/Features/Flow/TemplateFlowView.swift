@@ -3,6 +3,7 @@
 //  Variations
 //
 //  模版流程（设计稿 02）：1 选图 → 2 编译 → 3 编辑；压缩→直传 OSS（进度/已上传态）。
+//  选图前须就「第三方 AI 数据共享」取得单独授权（Guideline 5.1.1(i) / 5.1.2(i)）。
 //
 
 import SwiftUI
@@ -13,6 +14,9 @@ struct TemplateFlowView: View {
     @Environment(Router.self) private var router
     @State var flow: FlowState
     @State private var pickerItem: PhotosPickerItem?
+    /// 选图前 AI 共享授权闸门：未授权时先展示披露页，取得授权后再打开 PhotosPicker
+    @State private var showAIGate = false
+    @State private var pickerPresented = false
 
     var body: some View {
         ScrollView {
@@ -60,7 +64,13 @@ struct TemplateFlowView: View {
 
     private var pickCard: some View {
         VStack(spacing: 10) {
-            PhotosPicker(selection: $pickerItem, matching: .images) {
+            Button {
+                if services.consent.hasAISharingConsent {
+                    pickerPresented = true
+                } else {
+                    showAIGate = true
+                }
+            } label: {
                 Group {
                     if let image = flow.previewImage {
                         // 完整展示原比例，不裁剪
@@ -78,11 +88,18 @@ struct TemplateFlowView: View {
                     }
                 }
             }
+            .buttonStyle(.plain)
+            .photosPicker(isPresented: $pickerPresented, selection: $pickerItem, matching: .images)
 
             statusRow
         }
         .padding(10)
         .cardBackground()
+        .sheet(isPresented: $showAIGate) {
+            AIDataSharingConsentSheet {
+                pickerPresented = true
+            }
+        }
     }
 
     @ViewBuilder
