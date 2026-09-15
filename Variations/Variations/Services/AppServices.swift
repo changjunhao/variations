@@ -4,6 +4,11 @@
 //
 //  依赖容器：AppConfiguration + SettingsStore + DeviceAuth + APIClient，经 environment 注入视图树。
 //
+//  多窗口：本容器由 VariationsApp 的 @State 持有，每进程一份、跨 scene 共享，这是**有意为之**：
+//  设备身份令牌、Apple 会话、StoreKit 补单监听（Transaction.updates）与配额都必须全进程唯一，
+//  拆成 per-scene 实例会导致重复补单与配额显示打架。需按窗口隔离的只有导航态（Router，
+//  已随 TabStack 的 @State 天然每 scene 一份）。
+//
 
 import AuthenticationServices
 import Foundation

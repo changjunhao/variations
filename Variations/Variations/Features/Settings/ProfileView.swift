@@ -14,9 +14,6 @@ struct ProfileView: View {
     @Environment(AppServices.self) private var services
     @Environment(\.colorScheme) private var colorScheme
 
-    /// 非 nil 时（iPhone compact）底部显示胶囊 TabBar
-    var tabSelection: Binding<AppTab>? = nil
-
     @State private var showServer = false
     @State private var serverDraft = ""
     @State private var serverInvalid = false
@@ -96,11 +93,6 @@ struct ProfileView: View {
             .padding(.bottom, 24)
         }
         .background(Theme.background)
-        .safeAreaInset(edge: .bottom) {
-            if let tabSelection {
-                CapsuleTabBar(selection: tabSelection)
-            }
-        }
         .task {
             cacheBytes = Self.totalCacheBytes()
             session = await services.accountAuth.currentSession()
@@ -407,6 +399,7 @@ struct ProfileView: View {
         .padding(20)
         .presentationDetents([.height(260)])
         .presentationBackground(Theme.surface)
+        .chromeCenteredPresentation()
     }
 
     // MARK: - 动作

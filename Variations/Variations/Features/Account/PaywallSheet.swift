@@ -65,6 +65,7 @@ struct PaywallSheet: View {
         .padding(.bottom, 32)
         .presentationDetents([.medium])
         .presentationBackground(Theme.surface)
+        .chromeCenteredPresentation()
         .task { await services.store.load() }
     }
 

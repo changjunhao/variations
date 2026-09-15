@@ -38,20 +38,9 @@ enum Theme {
     // MARK: - 圆角
 
     enum Radius {
-        /// Tab 容器
-        static let container: CGFloat = 36
-        /// 选中胶囊/主按钮
-        static let capsule: CGFloat = 26
-        /// 卡片
+        /// 卡片（模版卡/输入容器/图片）
         static let card: CGFloat = 12
     }
-
-    // MARK: - 阴影
-
-    /// Tab 容器投影 rgba(31,28,23,0.08) y2 blur8
-    static let containerShadowColor = Color(hex24: 0x1F1C17).opacity(0.08)
-    static let containerShadowRadius: CGFloat = 8
-    static let containerShadowY: CGFloat = 2
 
     // MARK: - 字体
 

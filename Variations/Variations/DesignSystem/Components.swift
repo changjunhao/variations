@@ -3,53 +3,114 @@
 //  Variations
 //
 //  设计系统通用组件：主/次按钮、卡片容器、占位图。
+//  按钮属 chrome（行动层）：iOS 26+ 走系统玻璃按钮样式；卡片与占位图属纸面，永不上玻璃。
 //
 
 import SwiftUI
 
-/// 主按钮：朱红胶囊（圆角 26），设计稿底部 CTA
+/// 主按钮：朱红胶囊，设计稿 CTA。
+/// - `.regular`：全宽底部 CTA（流程页 / 直输页，高 ~50pt）
+/// - `.compact`：结果舞台操作行「再变奏一次」（小号，随内容定宽，不抢整行、不折行）
+/// iOS 26+ 改用 .glassProminent + 朱红 tint：禁用态、按压态与清晰度由系统接管
 struct PrimaryButton: View {
+    enum Size { case regular, compact }
+
     let title: String
+    var size: Size = .regular
     var enabled: Bool = true
     let action: () -> Void
 
     var body: some View {
-        Button(action: action) {
+        if #available(iOS 26, *) {
+            Button(action: action) { glassLabel }
+                .buttonStyle(.glassProminent)
+                .buttonBorderShape(.capsule)
+                .controlSize(size == .regular ? .large : .regular)
+                .tint(Theme.primary)
+                .disabled(!enabled)
+        } else {
+            Button(action: action) { legacyLabel }
+                .buttonStyle(.plain)
+                .disabled(!enabled)
+        }
+    }
+
+    @ViewBuilder
+    private var glassLabel: some View {
+        switch size {
+        case .regular:
+            Text(title)
+                .font(.system(size: 17, weight: .semibold))
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 6)
+        case .compact:
+            Text(title)
+                .font(.system(size: 15, weight: .semibold))
+                .lineLimit(1)
+        }
+    }
+
+    @ViewBuilder
+    private var legacyLabel: some View {
+        switch size {
+        case .regular:
             Text(title)
                 .font(.system(size: 17, weight: .semibold))
                 .foregroundStyle(Theme.onPrimary)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
                 .background(Capsule().fill(enabled ? Theme.primary : Theme.primary.opacity(0.4)))
+        case .compact:
+            Text(title)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(Theme.onPrimary)
+                .lineLimit(1)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 10)
+                .background(Capsule().fill(enabled ? Theme.primary : Theme.primary.opacity(0.4)))
         }
-        .buttonStyle(.plain)
-        .disabled(!enabled)
     }
 }
 
-/// 次按钮：米色卡片+描边（存为提示词模版 / 载入提示词模版）
+/// 次按钮：米色卡片+描边（存为提示词模版 / 载入提示词模版）。
+/// iOS 26+ 改用 .glass（无色玻璃），与主按钮拉开层次
 struct SecondaryButton: View {
     let title: String
     var icon: String? = nil
     let action: () -> Void
 
     var body: some View {
-        Button(action: action) {
-            HStack(spacing: 8) {
-                if let icon { Image(systemName: icon) }
-                Text(title)
+        if #available(iOS 26, *) {
+            Button(action: action) {
+                label
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 4)
             }
-            .font(.system(size: 15, weight: .medium))
-            .foregroundStyle(Theme.textPrimary)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 14)
-            .background(
-                RoundedRectangle(cornerRadius: Theme.Radius.card)
-                    .fill(Theme.card)
-                    .overlay(RoundedRectangle(cornerRadius: Theme.Radius.card).strokeBorder(Theme.textSecondary.opacity(0.25)))
-            )
+            .buttonStyle(.glass)
+            .controlSize(.large)
+            .tint(Theme.textPrimary)
+        } else {
+            Button(action: action) {
+                label
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(
+                        RoundedRectangle(cornerRadius: Theme.Radius.card)
+                            .fill(Theme.card)
+                            .overlay(RoundedRectangle(cornerRadius: Theme.Radius.card).strokeBorder(Theme.textSecondary.opacity(0.25)))
+                    )
+            }
+            .buttonStyle(.plain)
         }
-        .buttonStyle(.plain)
+    }
+
+    private var label: some View {
+        HStack(spacing: 8) {
+            if let icon { Image(systemName: icon) }
+            Text(title)
+        }
+        .font(.system(size: 15, weight: .medium))
+        .foregroundStyle(Theme.textPrimary)
     }
 }
 

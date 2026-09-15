@@ -36,7 +36,10 @@
 	<key>RegisterSecret</key>
 	<string>$(REGISTER_SECRET)</string>
 	<key>UIApplicationSceneManifest</key>
-	<dict/>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<true/>
+	</dict>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchScreen</key>

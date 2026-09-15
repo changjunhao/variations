@@ -2,7 +2,8 @@
 //  RootView.swift
 //  Variations
 //
-//  应用骨架：iPhone 自绘胶囊 TabBar（隐藏系统 bar）；iPad regular 走 NavigationSplitView。
+//  应用骨架：单一 TabView + sidebarAdaptable —— compact 走系统底部 TabBar，
+//  regular 自动升为侧栏，窗口拖拽 resize 时由系统在同一棵树内切换形态。
 //
 
 import AuthenticationServices
@@ -26,30 +27,23 @@ enum AppTab: String, CaseIterable, Identifiable {
 }
 
 struct RootView: View {
-    @Environment(\.horizontalSizeClass) private var hSize
     @Environment(AppServices.self) private var services
     @Environment(\.modelContext) private var modelContext
     @State private var selection: AppTab = .home
 
     var body: some View {
-        Group {
-            if hSize == .regular {
-                splitLayout
-            } else {
-                compactLayout
+        tabs
+            .preferredColorScheme(colorScheme)
+            // Apple 授权可被用户在系统设置里停用：启动补查一次（覆盖离线期间的停用），
+            // 运行中则由系统通知触发，两路均降级为游客
+            .task { await services.syncAppleCredentialState() }
+            .onReceive(NotificationCenter.default.publisher(
+                for: ASAuthorizationAppleIDProvider.credentialRevokedNotification)) { _ in
+                Task { await services.handleAppleCredentialRevoked() }
             }
-        }
-        .preferredColorScheme(colorScheme)
-        // Apple 授权可被用户在系统设置里停用：启动补查一次（覆盖离线期间的停用），
-        // 运行中则由系统通知触发，两路均降级为游客
-        .task { await services.syncAppleCredentialState() }
-        .onReceive(NotificationCenter.default.publisher(
-            for: ASAuthorizationAppleIDProvider.credentialRevokedNotification)) { _ in
-            Task { await services.handleAppleCredentialRevoked() }
-        }
-        #if DEBUG
-        .task { MarketingSeed.seedRecordsIfNeeded(context: modelContext) }
-        #endif
+            #if DEBUG
+            .task { MarketingSeed.seedRecordsIfNeeded(context: modelContext) }
+            #endif
     }
 
     private var colorScheme: ColorScheme? {
@@ -60,40 +54,43 @@ struct RootView: View {
         }
     }
 
-    private var splitLayout: some View {
-            NavigationSplitView {
-                List(AppTab.allCases, selection: Binding(get: { Optional(selection) }, set: { selection = $0 ?? .home })) { tab in
-                    Label(tab.rawValue, systemImage: tab.icon)
-                        .tag(tab)
-                }
-                .scrollContentBackground(.hidden)
-                .background(Theme.background)
-                .navigationTitle("变奏")
-            } detail: {
-                TabStack {
-                    detail(for: selection, tabSelection: nil)
+    /// 不按 horizontalSizeClass 手切两套布局：窗口化下拖拽 resize 会跨越 size class
+    /// 阈值，整棵树被替换会连带重建 TabStack，各 Tab 的导航栈随之清空。
+    /// sidebarAdaptable 由系统在同一棵树内做 TabBar ↔ 侧栏切换，状态不丢。
+    private var tabs: some View {
+        TabView(selection: $selection) {
+            ForEach(AppTab.allCases) { tab in
+                Tab(tab.rawValue, systemImage: tab.icon, value: tab) {
+                    TabStack {
+                        detail(for: tab)
+                    }
                 }
             }
+        }
+        .tabViewStyle(.sidebarAdaptable)
+        .chromeTabBarMinimize()
+        .tabViewSidebarHeader { sidebarWordmark }
     }
 
-    private var compactLayout: some View {
-            TabView(selection: $selection) {
-                ForEach(AppTab.allCases) { tab in
-                    TabStack {
-                        detail(for: tab, tabSelection: $selection)
-                    }
-                    .toolbar(.hidden, for: .tabBar)
-                    .tag(tab)
-                }
-            }
+    /// 侧栏页眉：承接原 NavigationSplitView 侧栏的「变奏」标题
+    private var sidebarWordmark: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text("变奏")
+                .font(.system(size: 22, weight: .bold))
+                .foregroundStyle(Theme.textPrimary)
+            Text("Theme & Variations")
+                .font(Theme.Fonts.serifItalic(13))
+                .foregroundStyle(Theme.textSecondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     @ViewBuilder
-    private func detail(for tab: AppTab, tabSelection: Binding<AppTab>?) -> some View {
+    private func detail(for tab: AppTab) -> some View {
         switch tab {
-        case .home: HomeView(tabSelection: tabSelection)
-        case .collection: CollectionView(tabSelection: tabSelection)
-        case .profile: ProfileView(tabSelection: tabSelection)
+        case .home: HomeView()
+        case .collection: CollectionView()
+        case .profile: ProfileView()
         }
     }
 }
@@ -112,52 +109,13 @@ struct TabStack<Content: View>: View {
                 .navigationDestination(for: Route.self) { route in
                     RouteView(route: route)
                         .environment(router)
+                        // 次级（push 进入）页隐藏底部 Tab 栏：只在三个根页展示，
+                        // 流程/结果等详情页不再被系统 Tab 栏（含最小化胶囊）干扰
+                        .toolbar(.hidden, for: .tabBar)
                 }
                 .environment(router)
         }
         .environment(router)
-    }
-}
-
-/// 设计稿胶囊 Tab Bar：容器圆角 36 + 选中红胶囊圆角 26
-struct CapsuleTabBar: View {
-    @Binding var selection: AppTab
-
-    var body: some View {
-        HStack(spacing: 0) {
-            ForEach(AppTab.allCases) { tab in
-                Button {
-                    withAnimation(.snappy) { selection = tab }
-                } label: {
-                    VStack(spacing: 4) {
-                        Image(systemName: tab.icon)
-                            .font(.system(size: 16, weight: .medium))
-                        Text(tab.rawValue)
-                            .font(.system(size: 11))
-                    }
-                    .foregroundStyle(selection == tab ? Theme.onPrimary : Theme.textSecondary)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
-                    .background {
-                        if selection == tab {
-                            Capsule().fill(Theme.primary)
-                        }
-                    }
-                }
-                .buttonStyle(.plain)
-                .padding(.horizontal, 4)
-                .accessibilityLabel(tab.rawValue)
-                .accessibilityAddTraits(selection == tab ? [.isSelected] : [])
-            }
-        }
-        .padding(6)
-        .background(
-            Capsule()
-                .fill(Theme.surface)
-                .shadow(color: Theme.containerShadowColor, radius: Theme.containerShadowRadius, y: Theme.containerShadowY)
-        )
-        .padding(.horizontal, 24)
-        .padding(.bottom, 4)
     }
 }
 

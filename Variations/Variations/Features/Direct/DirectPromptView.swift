@@ -274,6 +274,7 @@ struct DirectPromptView: View {
         .padding(20)
         .presentationDetents([.height(220)])
         .presentationBackground(Theme.surface)
+        .chromeCenteredPresentation()
     }
 
     // MARK: - 动作

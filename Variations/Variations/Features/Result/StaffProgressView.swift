@@ -120,6 +120,9 @@ struct ComposingStaffView: View {
     let phase: StaffPhase
     /// 固定拍（预览/快照）：非 nil 时停用时间轴，音符呈静态姿势
     var fixedBeat: Int? = nil
+    /// 系统资源节流（iOS 27+）：只停音符跳跃动画，拍仍逐拍推进——
+    /// 五线谱是生图期间唯一的进度线索，整体冻住会像卡死
+    var calmMotion = false
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var startDate = Date()
@@ -167,7 +170,7 @@ struct ComposingStaffView: View {
                     NoteView(
                         phase: phase == .finale ? .jumping : StaffConductor.phase(beat: beat, index: index),
                         isFinale: phase == .finale,
-                        reduceMotion: reduceMotion,
+                        reduceMotion: reduceMotion || calmMotion,
                         staticPose: staticPose
                     )
                     .padding(.top, StaffMotion.noteRestYs[index])

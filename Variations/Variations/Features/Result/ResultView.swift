@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SwiftData
+import Photos
 
 struct ResultView: View {
     @Environment(AppServices.self) private var services
@@ -17,6 +18,8 @@ struct ResultView: View {
 
     @State private var busy = false
     @State private var errorMessage: String?
+    /// 存相册后的轻提示（与设计“安静反馈”一致，自动消失，不上阻断式弹窗）
+    @State private var saveToast: String?
 
     private var label: String { "Variation No.\(record.no)" }
 
@@ -37,6 +40,19 @@ struct ResultView: View {
                 .padding(.top, 12)
 
             stage
+                .overlay(alignment: .bottom) {
+                    if let saveToast {
+                        Text(saveToast)
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundStyle(Theme.textPrimary)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 10)
+                            .background(Theme.surface, in: Capsule())
+                            .overlay(Capsule().strokeBorder(Theme.textSecondary.opacity(0.15)))
+                            .padding(.bottom, 12)
+                            .transition(.opacity)
+                    }
+                }
 
             controls
 
@@ -62,6 +78,7 @@ struct ResultView: View {
         }, message: {
             Text(errorMessage ?? "")
         })
+        .animation(.easeInOut(duration: 0.2), value: saveToast)
     }
 
     // MARK: - 舞台
@@ -117,14 +134,16 @@ struct ResultView: View {
                 .accessibilityLabel("分享")
             }
 
-            PrimaryButton(title: "再变奏一次", enabled: !busy && !services.quotaStore.exhausted) {
+            PrimaryButton(title: "再变奏一次", size: .compact, enabled: !busy && !services.quotaStore.exhausted) {
                 Task { await varyAgain() }
             }
             if services.quotaStore.exhausted {
                 Text(services.quotaStore.exhaustedHint)
                     .font(.system(size: 12))
                     .foregroundStyle(Theme.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
+            Spacer(minLength: 0)
         }
     }
 
@@ -139,7 +158,39 @@ struct ResultView: View {
 
     private func saveToAlbum() {
         guard let image = watermarked else { return }
-        UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
+        Task { await persistToAlbum(image) }
+    }
+
+    /// 仅申请「添加到相册」权限，落盘后给一次轻提示；权限被拒或写入失败均有可读反馈
+    @MainActor
+    private func persistToAlbum(_ image: UIImage) async {
+        var status = PHPhotoLibrary.authorizationStatus(for: .addOnly)
+        if status == .notDetermined {
+            status = await PHPhotoLibrary.requestAuthorization(for: .addOnly)
+        }
+        guard status == .authorized || status == .limited else {
+            showSaveToast("无法保存：请在设置中允许「添加到相册」")
+            return
+        }
+        do {
+            try await PHPhotoLibrary.shared().performChanges {
+                PHAssetChangeRequest.creationRequestForAsset(from: image)
+            }
+            showSaveToast("已存到相册")
+        } catch {
+            showSaveToast("保存失败，请稍后重试")
+        }
+    }
+
+    /// 轻提示 2 秒后淡出；重复点击以最后一次为准（token 防串场）
+    @MainActor
+    private func showSaveToast(_ text: String) {
+        saveToast = text
+        let shown = text
+        Task {
+            try? await Task.sleep(for: .seconds(2))
+            if saveToast == shown { saveToast = nil }
+        }
     }
 
     private func varyAgain() async {

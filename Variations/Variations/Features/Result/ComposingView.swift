@@ -32,6 +32,12 @@ struct ComposingView: View {
         .background(Theme.background)
         // 设计稿无导航栏；「取消」承担返回
         .toolbar(.hidden, for: .navigationBar)
+        // 多窗口：谱写中关窗会丢本号变奏，先问一句
+        .sceneClosureGuard(
+            isActive: staffPhase == .composing && errorMessage == nil,
+            title: "变奏还在谱写中",
+            message: "关闭窗口会中断本号变奏，已消耗的次数不会退回。"
+        )
         .task {
             variationNo = Self.nextNo(context: modelContext)
             status = flow.editedPrompt.isEmpty
@@ -124,7 +130,13 @@ struct ComposingStageView: View {
     var onCancel: () -> Void = {}
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// iOS 27+ 系统请求节约资源（低电量/热压力）：与 Reduce Motion 同路降级，
+    /// 谱写循环是持续动画，生图期间正是应该让位的开销
+    @Environment(\.prefersReducedResourceUsage) private var reducedResources
     @State private var appeared = false
+
+    /// 降级动效（无障碍偏好或系统资源节流）
+    private var calmMotion: Bool { reduceMotion || reducedResources }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -145,10 +157,10 @@ struct ComposingStageView: View {
                     Text("谱写变奏…")
                         .font(Theme.Fonts.serifItalic(30))
                         .foregroundStyle(Theme.textPrimary)
-                        .entrance(appeared: appeared, enabled: entranceEnabled, reduceMotion: reduceMotion, index: 0)
+                        .entrance(appeared: appeared, enabled: entranceEnabled, reduceMotion: calmMotion, index: 0)
 
-                    ComposingStaffView(phase: phase, fixedBeat: fixedBeat)
-                        .entrance(appeared: appeared, enabled: entranceEnabled, reduceMotion: reduceMotion, index: 1)
+                    ComposingStaffView(phase: phase, fixedBeat: fixedBeat, calmMotion: calmMotion)
+                        .entrance(appeared: appeared, enabled: entranceEnabled, reduceMotion: calmMotion, index: 1)
 
                     Text(status)
                         .font(.system(size: 13))
@@ -156,7 +168,7 @@ struct ComposingStageView: View {
                         .id(status)
                         .transition(.opacity)
                         .animation(.easeInOut(duration: StaffMotion.statusFade), value: status)
-                        .entrance(appeared: appeared, enabled: entranceEnabled, reduceMotion: reduceMotion, index: 2)
+                        .entrance(appeared: appeared, enabled: entranceEnabled, reduceMotion: calmMotion, index: 2)
                 }
             }
             Spacer()

@@ -3,7 +3,7 @@
 //  VariationsTests
 //
 //  设计还原快照：谱写变奏舞台（设计稿 04）浅/深双态，固定拍 2（音符 3 跳跃定格）。
-//  渲染方式同 HomeSnapshotTests；重录基线：
+//  渲染经 SnapshotHost（真实 window + drawHierarchy），基线按 OS 大版本分文件；重录基线：
 //  SNAPSHOT_RECORD=1 xcodebuild test ... -only-testing:VariationsTests/ComposingSnapshotTests
 //
 
@@ -22,6 +22,19 @@ final class ComposingSnapshotTests: XCTestCase {
         super.invokeTest()
     }
 
+    /// 基线按 OS 大版本分文件：同一用例在 iOS 26/27 各留一份
+    private var osTag: String {
+        "iOS\(ProcessInfo.processInfo.operatingSystemVersion.majorVersion)"
+    }
+
+    /// 基线以 iPhone idiom 为准（同 HomeSnapshotTests）
+    private func skipUnlessPhoneIdiom() throws {
+        try XCTSkipUnless(
+            UIDevice.current.userInterfaceIdiom == .phone,
+            "设计快照基线以 iPhone idiom 为准；iPad 请只跑非快照用例"
+        )
+    }
+
     @MainActor
     private func render(dark: Bool) -> UIImage {
         let root = ComposingStageView(
@@ -32,29 +45,18 @@ final class ComposingSnapshotTests: XCTestCase {
         )
         .background(Theme.background)
 
-        let host = UIHostingController(rootView: root)
-        host.overrideUserInterfaceStyle = dark ? .dark : .light
-        host.view.frame = CGRect(x: 0, y: 0, width: 393, height: 852)
-        host.view.backgroundColor = UIColor { traits in
-            traits.userInterfaceStyle == .dark ? UIColor(hex24: 0x191613) : UIColor(hex24: 0xFAF8F3)
-        }
-        host.view.setNeedsLayout()
-        host.view.layoutIfNeeded()
-
-        let format = UIGraphicsImageRendererFormat()
-        format.scale = 2
-        return UIGraphicsImageRenderer(size: host.view.bounds.size, format: format).image { _ in
-            host.view.layer.render(in: UIGraphicsGetCurrentContext()!)
-        }
+        return SnapshotHost.image(of: root, size: CGSize(width: 393, height: 852), dark: dark)
     }
 
     @MainActor
-    func testComposingLight() {
-        assertSnapshot(of: render(dark: false), as: .image)
+    func testComposingLight() throws {
+        try skipUnlessPhoneIdiom()
+        assertSnapshot(of: render(dark: false), as: .image, named: osTag)
     }
 
     @MainActor
-    func testComposingDark() {
-        assertSnapshot(of: render(dark: true), as: .image)
+    func testComposingDark() throws {
+        try skipUnlessPhoneIdiom()
+        assertSnapshot(of: render(dark: true), as: .image, named: osTag)
     }
 }

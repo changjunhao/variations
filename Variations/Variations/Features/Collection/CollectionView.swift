@@ -7,17 +7,19 @@
 
 import SwiftUI
 import SwiftData
+import NukeUI
 
 struct CollectionView: View {
     @Environment(Router.self) private var router
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \VariationRecord.no, order: .reverse) private var records: [VariationRecord]
 
+    /// iPad 多窗口可用时，长按菜单多一项「在新窗口打开」
+    @Environment(\.supportsMultipleWindows) private var supportsMultipleWindows
+    @Environment(\.openWindow) private var openWindow
+
     /// 待确认删除的记录（长按菜单触发）
     @State private var pendingDelete: VariationRecord?
-
-    /// 非 nil 时（iPhone compact）底部显示胶囊 TabBar
-    var tabSelection: Binding<AppTab>? = nil
 
     private let columns = [
         GridItem(.flexible(), spacing: 12),
@@ -45,6 +47,13 @@ struct CollectionView: View {
                         }
                         .buttonStyle(.plain)
                         .contextMenu {
+                            if supportsMultipleWindows {
+                                Button {
+                                    openWindow(value: record.persistentModelID)
+                                } label: {
+                                    Label("在新窗口打开", systemImage: "macwindow.badge.plus")
+                                }
+                            }
                             Button(role: .destructive) {
                                 pendingDelete = record
                             } label: {
@@ -77,25 +86,26 @@ struct CollectionView: View {
             .padding(.bottom, 24)
         }
         .background(Theme.background)
-        .safeAreaInset(edge: .bottom) {
-            if let tabSelection {
-                CapsuleTabBar(selection: tabSelection)
-            }
-        }
     }
 
     private func recordCard(_ record: VariationRecord) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             // Color.clear 先占满“列宽×150”锁定格子尺寸，任何原图比例都不会撞破格子；
-            // overlay 内 scaledToFit 完整展示整幅作品
+            // overlay 内 scaledToFit 完整展示整幅作品。
+            // 缩略图走 Nuke（同 HomeView 样图）：原先的 UIImage(contentsOfFile:) 会在每次
+            // body 求值时同步重解一次，无缓存；多窗口多列下卡顿更明显
             Color.clear
                 .frame(maxWidth: .infinity)
                 .frame(height: 150)
                 .overlay {
-                    if let rel = record.thumbRelPath, let image = UIImage(contentsOfFile: ArtifactsStore.url(relative: rel).path) {
-                        Image(uiImage: image)
-                            .resizable()
-                            .scaledToFit()
+                    if let rel = record.thumbRelPath {
+                        LazyImage(url: ArtifactsStore.url(relative: rel)) { state in
+                            if let image = state.image {
+                                image.resizable().scaledToFit()
+                            } else {
+                                ImagePlaceholder(label: " ")
+                            }
+                        }
                     } else {
                         ImagePlaceholder(label: " ")
                     }

@@ -9,33 +9,51 @@ import SwiftUI
 import SwiftData
 import NukeUI
 
+/// 首页宽度分档（纯函数，供单测直接验证）。
+/// 不用 hSize/vSize 组合判断：iPadOS 窗口化后窗口可拖成任意宽高比，
+/// 「hSize regular + vSize compact」不再等价于 iPad 横屏。
+nonisolated enum HomeGrid {
+
+    /// 宽版式阈值（页边距 32 / 大标题交给侧栏页眉）
+    static let wideThreshold: CGFloat = 600
+
+    /// 官方模版网格列数：≥900 四列、≥600 三列、否则两列
+    static func skillColumnCount(width: CGFloat) -> Int {
+        if width >= 900 { 4 } else if width >= wideThreshold { 3 } else { 2 }
+    }
+
+    /// 宽版式：页边距 32，否则 20（设计稿 01/10）
+    static func isRegular(width: CGFloat) -> Bool {
+        width >= wideThreshold
+    }
+}
+
 struct HomeView: View {
     @Environment(AppServices.self) private var services
     @Environment(Router.self) private var router
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \UserSkillTemplate.createdAt) private var myTemplates: [UserSkillTemplate]
-    @Environment(\.horizontalSizeClass) private var hSize
-    @Environment(\.verticalSizeClass) private var vSize
-
-    /// 非 nil 时（iPhone compact）底部显示胶囊 TabBar
-    var tabSelection: Binding<AppTab>? = nil
 
     @State private var skills: [SkillCard] = []
     @State private var loadError: String?
     /// 非 nil 时全屏预览该模版样图（捏合缩放 / 双击复位）
     @State private var previewSkill: SkillCard?
+    /// 实测内容宽度：窗口化下 size class 不再等价于「宽窄」，一律按此分档。
+    /// 首帧为 0 时走紧凑默认（两列），几何下发后再升档
+    @State private var contentWidth: CGFloat = 0
 
-    private var isRegular: Bool { hSize == .regular }
+    /// 宽版式（iPad 全屏/宽窗口）：页边距 32、大标题在侧栏
+    private var isRegular: Bool { HomeGrid.isRegular(width: contentWidth) }
 
-    /// 宽网格（iPad 横屏）：hSize/vSize 同为 regular 时 iPad 竖屏 hSize 也是 regular，
-    /// 必须加 vSize == .compact 才能区分横屏；iPhone 与 iPad 竖屏走紧凑规范
-    private var isWideGrid: Bool { hSize == .regular && vSize == .compact }
+    private var skillColumnCount: Int { HomeGrid.skillColumnCount(width: contentWidth) }
 
-    /// 官方模版网格：iPad 横屏 4 列间距 16（设计稿 10）；iPhone / iPad 竖屏 2 列间距 12（设计稿 01）
+    /// 宽网格（三列及以上）：卡片改用紧凑字号与更方的样图盒
+    private var isWideGrid: Bool { skillColumnCount >= 3 }
+
     private var skillColumns: [GridItem] {
         Array(
             repeating: GridItem(.flexible(), spacing: isWideGrid ? 16 : 12),
-            count: isWideGrid ? 4 : 2
+            count: skillColumnCount
         )
     }
 
@@ -47,7 +65,7 @@ struct HomeView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                // iPad 大标题在侧栏（设计稿 10 内容区直接是官方模版）
+                // 宽版式下大标题在侧栏页眉（设计稿 10 内容区直接是官方模版）
                 if !isRegular { header }
                 officialSection
                 mySection
@@ -58,11 +76,7 @@ struct HomeView: View {
             .padding(.bottom, 24)
         }
         .background(Theme.background)
-        .safeAreaInset(edge: .bottom) {
-            if let tabSelection {
-                CapsuleTabBar(selection: tabSelection)
-            }
-        }
+        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { contentWidth = $0 }
         .fullScreenCover(item: $previewSkill) { skill in
             SamplePreviewCover(skill: skill)
         }
