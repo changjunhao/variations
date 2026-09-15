@@ -50,20 +50,33 @@
 
 ## 测试
 
+部署目标仍是 iOS 18.0，但新外观分两档门控（Liquid Glass 自 **iOS 26** 起、弹层放置/资源节流自 **iOS 27** 起），
+故两条 runtime 都要跑；iPad 用于验证窗口化布局与多窗口。快照基线按 OS 大版本分文件（`*.iOS27.png`），互不覆盖。
+
 ```bash
-# 单测 + 快照比对
+# 单测 + 快照比对（iOS 27）
 xcodebuild test -scheme Variations \
-  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+  -destination 'platform=iOS Simulator,name=iPhone 17,OS=27.0' \
   -only-testing:VariationsTests
 
-# 重录快照基线（设计改版后）
+# 降级分支回归（iOS 26 runtime，验证非玻璃路径未被带崩）
+xcodebuild test -scheme Variations \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5' \
+  -only-testing:VariationsTests
+
+# iPad 窗口化布局（宽版式四列 / 侧栏形态）
+xcodebuild test -scheme Variations \
+  -destination 'platform=iOS Simulator,name=iPad Pro 11-inch (M5),OS=27.0' \
+  -only-testing:VariationsTests
+
+# 重录快照基线（设计改版后；只重录当前 destination 对应的 OS 档）
 SNAPSHOT_RECORD=1 xcodebuild test -scheme Variations \
-  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+  -destination 'platform=iOS Simulator,name=iPhone 17,OS=27.0' \
   -only-testing:VariationsTests/HomeSnapshotTests
 
 # UI 冒烟
 xcodebuild test -scheme Variations \
-  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+  -destination 'platform=iOS Simulator,name=iPhone 17,OS=27.0' \
   -only-testing:VariationsUITests/SmokeUITests
 ```
 

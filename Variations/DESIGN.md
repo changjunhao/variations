@@ -139,6 +139,26 @@ Swift 实现：所有颜色在 Assets.xcassets 建 Any Appearance + Dark Appeara
 
 ---
 
+## 4.5 系统材质边界（Liquid Glass）
+
+iOS 26 起系统 chrome 改用 Liquid Glass。本设计语言是「纸上乐谱」，明确要求无渐变、作品优先，
+因此**玻璃只上 chrome，纸面永不上玻璃**：
+
+| 层 | 归属 | iOS 26+ | iOS 25 及以下 |
+|---|---|---|---|
+| TabBar / 导航栏 / 工具栏 | chrome | 交系统绘制（玻璃 + 下滑最小化） | 纸色实心背景 |
+| 主/次按钮 | chrome（行动层） | `.glassProminent` + 朱红 tint / `.glass` | 朱红胶囊 / 米色描边卡 |
+| 吸底 CTA 条 | chrome | 保留纸色实心底（条内有提示文字，需可读） | 纸色实心底 |
+| 弹层（sheet） | chrome | iOS 27 宽窗口下 `presentationPlacement(.center)` | 贴底 detents |
+| 模版卡 / 米色容器 / 占位图 / 结果大图承载面 | 纸面 | **不变**，保持哑光 | 不变 |
+
+实现上门控收口在 `DesignSystem/PlatformCapability.swift`（`chrome*` 系列 modifier），
+视图层不自己散写 `#available`。门控只允许两个谓词：**iOS 26**（玻璃）与 **iOS 27**（弹层放置/资源节流）。
+
+> 玻璃之上不得再叠自绘阴影（会出现双重边缘）。原 3.9 的 Tab 容器投影令牌已随自绘胶囊 TabBar 一同移除。
+
+---
+
 ## 5. Component Specs（核心组件）
 
 ### 5.1 TemplateCard（模版卡片 · Home）
@@ -240,10 +260,17 @@ Swift 实现：所有颜色在 Assets.xcassets 建 Any Appearance + Dark Appeara
 
 ## 6. 布局
 
-- **iPhone**：单列导航；Home 模版 2 列网格；流程页（选图→编译→编辑）垂直分步，主按钮吸底；胶囊 TabBar 三 Tab：首页 / 变奏集 / **我的**（5.8）
-- **iPad**：`NavigationSplitView`——侧栏（变奏集/我的模版/我的，240pt）+ 内容区；Home 4 列网格；结果舞台居中限宽 720pt
-- 页边距：iPhone 20pt / iPad 32pt；区块间距 40pt；安全区严格遵循
+单一 `TabView` + `.tabViewStyle(.sidebarAdaptable)`：紧凑形态是底部系统 TabBar，宽形态由系统自动升为侧栏。
+不再按 `horizontalSizeClass` 手切两套布局——iPadOS 窗口化下拖拽 resize 会跨越 size class 阈值，
+整棵树被替换会连带重建各 Tab 的导航栈（导航态丢失）。
+
+- **三 Tab**：首页 / 变奏集 / **我的**（5.8）；侧栏页眉承载「变奏 / Theme & Variations」字标
+- **宽窄分档按实测容器宽度**（`HomeGrid`，不用 size class）：Home 模版网格 ≥900pt 四列 / ≥600pt 三列 / 否则两列
+- 页边距：宽度 <600pt 为 20pt，≥600pt 为 32pt（与列数共用同一阈值，避免两套口径）；区块间距 40pt；安全区严格遵循
+- 流程页（选图→编译→编辑）垂直分步，主按钮吸底；结果舞台居中限宽 720pt
 - 分隔线一律 0.5pt `hairline`（发丝线，谱面感）
+- **iPad 多窗口**：`UIApplicationSupportsMultipleScenes = true`；变奏集长按可「在新窗口打开」单号变奏
+  （第二个 `WindowGroup(for: PersistentIdentifier.self)`）；谱写中关窗会先二次确认（iOS 27）
 
 ---
 
@@ -300,8 +327,9 @@ ios/Variations/DesignSystem/
 1. 视图代码**禁止硬编码 hex**，只用语义色；新色需求先回到第 3 节加 token
 2. 编号一律衬线、正文一律无衬线，不混用
 3. 强调色只有朱——任何"再加一个彩色"的提议先质疑
-4. 阴影只两档；不新增投影
+4. 阴影只两档；不新增投影。chrome 已交系统玻璃，**玻璃上不得再叠自绘阴影**（双重边缘）
 5. 暗色模式是"夜谱"（第 3.3 节），不是反转
+6. 新系统特性的版本分支一律走 `PlatformCapability`（第 4.5 节），视图层不散写 `#available`
 
 ---
 
@@ -309,7 +337,8 @@ ios/Variations/DesignSystem/
 
 | ✅ Do | ❌ Don't |
 |---|---|
-| 留白充足，像谱面呼吸 | 用渐变、玻璃拟态、霓虹光效 |
+| 留白充足，像谱面呼吸 | 用渐变、自绘玻璃拟态、霓虹光效 |
+| chrome 交系统 Liquid Glass（4.5） | 把玻璃铺到纸面（卡片/容器/作品承载面） |
 | 衬线编号作为仪式感记号 | 界面大字全部衬线化 |
 | 朱色只给"下一步行动" | 朱色当装饰色大面积铺 |
 | 纸感暖灰体系 | 引入冷灰（#808080 系）或纯黑纯白 |
