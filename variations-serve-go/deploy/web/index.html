@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>变奏 Variations · AI 照片艺术变奏</title>
+<meta name="description" content="选一种风格，交一张照片，AI 读懂画面后重新创作——水墨海报、纸雕秘境、方块世界等 29 种官方风格。游客可免费体验，照片 48 小时自动删除。App Store 免费下载。">
+<meta property="og:title" content="变奏 Variations · AI 照片艺术变奏">
+<meta property="og:description" content="选一种风格，交一张照片，AI 读懂画面后重新创作——水墨海报、纸雕秘境、方块世界等 29 种官方风格。">
+<meta property="og:image" content="https://variations.ifable.cn/icon.png">
+<meta property="og:url" content="https://variations.ifable.cn/">
+<link rel="icon" href="icon.png">
+<link rel="apple-touch-icon" href="icon.png">
+<style>
+  :root {
+    --paper: #FAF8F3; --card: #F4F1E9; --ink: #1E1B17; --ink2: #6B655A;
+    --vermilion: #BE3E2B; --hairline: #EAE5D9;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--paper); color: var(--ink);
+    font: 16px/1.8 -apple-system, "PingFang SC", "Noto Sans SC", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--vermilion); text-decoration: none; }
+  .top, main, footer.wrap { max-width: 860px; margin: 0 auto; padding-left: 24px; padding-right: 24px; }
+  .top {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding-top: 28px;
+  }
+  .wordmark {
+    font-family: "Songti SC", "Noto Serif SC", Georgia, serif;
+    font-style: italic; font-size: 26px; letter-spacing: .01em;
+  }
+  .top nav a { margin-left: 20px; font-size: 14px; color: var(--ink2); }
+  .top nav a:hover { color: var(--vermilion); }
+
+  .hero { display: flex; align-items: center; gap: 56px; margin-top: 64px; }
+  .hero-copy { flex: 1; min-width: 0; }
+  .app-line { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+  .app-line img { width: 84px; height: 84px; border-radius: 22%; display: block;
+                  box-shadow: 0 2px 10px rgba(30,27,23,.10); }
+  .app-line .app-name {
+    font-family: "Songti SC", "Noto Serif SC", Georgia, serif;
+    font-style: italic; font-size: 22px;
+  }
+  .app-line .app-tag { font-size: 13px; color: var(--ink2); }
+  h1 {
+    font-family: "Songti SC", "Noto Serif SC", Georgia, serif;
+    font-size: 40px; line-height: 1.35; font-weight: 700; letter-spacing: .01em;
+  }
+  h1 em { font-style: normal; color: var(--vermilion); }
+  .sub { margin-top: 16px; font-size: 17px; max-width: 30em; }
+  .steps { margin-top: 18px; font-size: 14px; color: var(--ink2); }
+  .cta {
+    display: inline-block; margin-top: 30px; padding: 13px 30px;
+    background: var(--vermilion); color: #FFF; border-radius: 12px;
+    font-size: 17px; font-weight: 600; min-height: 44px; line-height: 1.4;
+    transition: opacity .15s ease;
+  }
+  .cta:hover { opacity: .9; }
+  .cta-note { margin-top: 10px; font-size: 13px; color: var(--ink2); }
+
+  .qr-card { flex-shrink: 0; text-align: center; }
+  .qr {
+    position: relative; display: inline-block; background: #FFF;
+    padding: 14px; border-radius: 18px; border: 1px solid var(--hairline);
+  }
+  .qr-img { width: min(240px, 64vw); height: auto; display: block; border-radius: 6px; }
+  .qr-tip { margin-top: 14px; font-size: 13px; color: var(--ink2); }
+
+  section { margin-top: 84px; }
+  h2 {
+    font-size: 20px; margin: 0 0 6px; padding-left: 12px;
+    border-left: 3px solid var(--vermilion);
+  }
+  .section-desc { color: var(--ink2); font-size: 15px; padding-left: 15px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+  .chip {
+    background: var(--card); border: 1px solid var(--hairline);
+    border-radius: 999px; padding: 7px 16px; font-size: 14px;
+  }
+  .chip.more { color: var(--ink2); border-style: dashed; }
+
+  .cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-top: 22px; }
+  .card { background: var(--card); border-radius: 14px; padding: 20px 22px; }
+  .card h3 { font-size: 16px; margin-bottom: 6px; }
+  .card p { font-size: 14px; line-height: 1.8; color: var(--ink2); }
+
+  .final { text-align: center; }
+  .final .line {
+    font-family: "Songti SC", "Noto Serif SC", Georgia, serif;
+    font-size: 24px;
+  }
+  .final a { display: inline-block; margin-top: 18px; font-size: 16px; }
+
+  footer.wrap {
+    margin-top: 84px; color: var(--ink2); font-size: 13px;
+    border-top: 1px solid var(--hairline); padding-top: 20px; padding-bottom: 48px;
+  }
+
+  @media (max-width: 680px) {
+    .hero { flex-direction: column; gap: 40px; margin-top: 40px; }
+    .hero-copy, .qr-card { width: 100%; }
+    .cards { grid-template-columns: 1fr; }
+    h1 { font-size: 32px; }
+    .top { flex-wrap: wrap; }
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --paper: #191613; --card: #221F1A; --ink: #FAF8F3; --ink2: #A9A294; --vermilion: #D95740; --hairline: #2E2A24; }
+    /* 二维码卡片固定白底，不随主题切换，保证暗色下扫码对比度 */
+    .qr { background: #FFF; border-color: #2E2A24; }
+  }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wordmark">Theme &amp; Variations</div>
+  <nav>
+    <a href="/support">技术支持</a>
+    <a href="/privacy">隐私政策</a>
+    <a href="/terms">用户协议</a>
+  </nav>
+</header>
+<main>
+  <section class="hero">
+    <div class="hero-copy">
+      <div class="app-line">
+        <img src="icon.png" alt="变奏 Variations 应用图标" width="84" height="84">
+        <div>
+          <div class="app-name">变奏 Variations</div>
+          <div class="app-tag">iOS · AI 照片艺术变奏</div>
+        </div>
+      </div>
+      <h1>一张照片，<em>变</em>一张作品。</h1>
+      <p class="sub">选一种风格，交出一张照片。变奏会读懂画面、重新构图，把它变成水墨海报、纸雕秘境或像素海报。</p>
+      <p class="steps">选一种风格 → 交一张照片 → 得一张作品</p>
+      <a class="cta" href="https://apps.apple.com/cn/app/%E5%8F%98%E5%A5%8F-ai-%E7%85%A7%E7%89%87%E8%89%BA%E6%9C%AF%E5%8F%98%E5%A5%8F/id6803094091" target="_blank" rel="noopener">App Store 免费下载</a>
+      <p class="cta-note">免费下载 · 次数包为可选内购</p>
+    </div>
+    <div class="qr-card">
+      <a class="qr" href="https://apps.apple.com/cn/app/%E5%8F%98%E5%A5%8F-ai-%E7%85%A7%E7%89%87%E8%89%BA%E6%9C%AF%E5%8F%98%E5%A5%8F/id6803094091" target="_blank" rel="noopener" aria-label="扫码或点击前往 App Store 下载变奏">
+        <img class="qr-img" src="qrcode.png" alt="App Store 下载二维码（中心内嵌变奏 icon）" width="240" height="240">
+      </a>
+      <p class="qr-tip">相机扫码 · 或点击直达 App Store</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>29 种官方风格，不止滤镜</h2>
+    <p class="section-desc">每种风格都是一套完整的编排：AI 先看懂你的照片，再按风格重新构图、上纸、落款。</p>
+    <div class="chips">
+      <span class="chip">水墨海报 · Ink Poster</span>
+      <span class="chip">纸雕秘境 · Paper Diorama</span>
+      <span class="chip">方块世界 · Minecraft World</span>
+      <span class="chip">像素点阵 · Pixel Poster</span>
+      <span class="chip">超现实波普 · Surreal Pop</span>
+      <span class="chip">压印浮雕 · Embossed Relief</span>
+      <span class="chip">毛线编织 · Organic Knit</span>
+      <span class="chip">珐琅贴之旅 · Enamel Pin Poster</span>
+      <span class="chip">晶析 · Crystalize</span>
+      <span class="chip">蓝色光波 · Blue Poster</span>
+      <span class="chip">拾影 · Photo Relic</span>
+      <span class="chip">静谧版画 · Woodcut Zine</span>
+      <span class="chip">水墨城市 · City Ink</span>
+      <span class="chip">废片焕新 · Photo Revival</span>
+      <span class="chip more">等 29 种</span>
+    </div>
+  </section>
+
+  <section>
+    <h2>先体验，再决定</h2>
+    <p class="section-desc">代价与边界，先说清楚。</p>
+    <div class="cards">
+      <div class="card">
+        <h3>免费开始</h3>
+        <p>不登录也能先完成一次变奏；用 Apple 登录，解锁每日免费额度。</p>
+      </div>
+      <div class="card">
+        <h3>次数包，永久有效</h3>
+        <p>免费额度之外可购次数包（10 / 60 / 160 次），即时到账，生成失败自动退还。</p>
+      </div>
+      <div class="card">
+        <h3>照片 48 小时自动删除</h3>
+        <p>上传的照片只用于当次生成，到期自动删除；变奏结果只保存在你的设备上。</p>
+      </div>
+      <div class="card">
+        <h3>付款交给 Apple</h3>
+        <p>登录与支付都走 Apple，我们不经手任何支付信息。</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="final">
+    <p class="line">现在，轮到你手机里的那张照片了。</p>
+    <a href="https://apps.apple.com/cn/app/%E5%8F%98%E5%A5%8F-ai-%E7%85%A7%E7%89%87%E8%89%BA%E6%9C%AF%E5%8F%98%E5%A5%8F/id6803094091" target="_blank" rel="noopener">在 App Store 免费下载变奏 →</a>
+  </section>
+</main>
+<footer class="wrap">© 2026 常君豪 · 变奏 Variations · <a href="/privacy">隐私政策</a> · <a href="/terms">用户协议</a> · <a href="/support">技术支持</a></footer>
+</body>
+</html>
