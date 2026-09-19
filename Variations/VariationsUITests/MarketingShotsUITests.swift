@@ -47,7 +47,7 @@ final class MarketingShotsUITests: XCTestCase {
             app.staticTexts["晶析 · Crystalize"].waitForExistence(timeout: 15),
             "官方模版未加载（后端是否已起？）"
         )
-        Thread.sleep(forTimeInterval: 8) // 样图异步解码（本地后端，留足余量防占位块）
+        Thread.sleep(forTimeInterval: 30) // 样图走 OSS 公网异步解码（iPad 宽版式四列并发更多，留足余量防占位块）
         shot("\(prefix)-home")
 
         // 2) 变奏集：胶囊 Tab（iPhone）或侧栏行（iPad）
@@ -76,8 +76,11 @@ final class MarketingShotsUITests: XCTestCase {
     // MARK: - 工具
 
     private func tapTab(_ title: String) {
-        if app.buttons[title].waitForExistence(timeout: 3) {
-            app.buttons[title].tap()
+        // 原生 sidebarAdaptable 下同一 Tab 会同时存在 floating tab bar cell 与侧栏行，
+        // 直接 app.buttons[title] 会命中多个元素导致 tap 失败，统一取 firstMatch
+        let btn = app.buttons[title].firstMatch
+        if btn.waitForExistence(timeout: 3) {
+            btn.tap()
         } else {
             app.staticTexts[title].firstMatch.tap()
         }
