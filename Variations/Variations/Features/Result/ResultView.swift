@@ -23,14 +23,14 @@ struct ResultView: View {
 
     private var label: String { "Variation No.\(record.no)" }
 
-    private var resultImage: UIImage? {
-        guard let rel = record.resultRelPath else { return nil }
-        return UIImage(contentsOfFile: ArtifactsStore.url(relative: rel).path)
-    }
-
-    private var watermarked: UIImage? {
-        resultImage.map { Watermark.burn($0, label: label) }
-    }
+    /// 结果图与水印成品：task 异步装载 + 缓存。
+    /// 原实现为计算属性，每次 body 求值都同步装载全尺寸图并重烧水印——折叠设备
+    /// 折/展连续 resize 提高求值频率，RecordWindow 多窗并存放大内存与 CPU 占用。
+    /// 以 persistentModelID 为键：varyAgain push 新记录页时重新装载。
+    @State private var resultImage: UIImage?
+    @State private var watermarked: UIImage?
+    /// 装载流程已结束（区分「装载中」与「文件缺失」两种舞台态）
+    @State private var loadFinished = false
 
     var body: some View {
         VStack(spacing: 16) {
@@ -62,6 +62,9 @@ struct ResultView: View {
                 .padding(.bottom, 8)
         }
         .padding(.horizontal, 20)
+        // 内容列限宽 720pt 居中（DESIGN.md §6 结果舞台既有规定）：
+        // Duo 内屏横屏 951pt 与 iPad 宽窗口下标题/控制行不拉满全宽；背景照旧满出血
+        .frame(maxWidth: 720)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.background)
         .navigationTitle(label)
@@ -79,6 +82,24 @@ struct ResultView: View {
             Text(errorMessage ?? "")
         })
         .animation(.easeInOut(duration: 0.2), value: saveToast)
+        .task(id: record.persistentModelID) { await loadImages() }
+    }
+
+    /// 异步装载结果图并烧水印（IO + 渲染 CPU 均在后台线程）；记录切换由 task(id:) 重建
+    private func loadImages() async {
+        resultImage = nil
+        watermarked = nil
+        loadFinished = false
+        let rel = record.resultRelPath
+        let label = self.label
+        let pair = await Task.detached(priority: .userInitiated) { () -> (UIImage, UIImage)? in
+            guard let rel,
+                  let image = UIImage(contentsOfFile: ArtifactsStore.url(relative: rel).path) else { return nil }
+            return (image, Watermark.burn(image, label: label))
+        }.value
+        resultImage = pair?.0
+        watermarked = pair?.1
+        loadFinished = true
     }
 
     // MARK: - 舞台
@@ -99,8 +120,11 @@ struct ResultView: View {
                             .background(Theme.surface.opacity(0.9), in: RoundedRectangle(cornerRadius: 8))
                             .padding(10)
                     }
-            } else {
+            } else if loadFinished {
                 ImagePlaceholder(label: "图片文件已丢失", icon: "exclamationmark.triangle")
+            } else {
+                // 装载中：占位保持舞台骨架稳定（本地 IO，极短）
+                ImagePlaceholder(label: " ")
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

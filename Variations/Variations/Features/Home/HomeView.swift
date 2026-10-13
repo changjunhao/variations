@@ -12,6 +12,10 @@ import NukeUI
 /// 首页宽度分档（纯函数，供单测直接验证）。
 /// 不用 hSize/vSize 组合判断：iPadOS 窗口化后窗口可拖成任意宽高比，
 /// 「hSize regular + vSize compact」不再等价于 iPad 横屏。
+/// iPhone Duo 几何：外屏 466pt（compact）→ 两列；内屏 669/951pt（regular×regular）
+/// → 三/四列，均落在既有档位区间；半折书本姿态折痕（division region）激活时
+/// 奇数列减一避让（HIG：sheets/alerts/工具栏由系统位移，滚动内容豁免，grid 是
+/// 开发者自己的责任区——division region 存在时偏好偶数列）。
 nonisolated enum HomeGrid {
 
     /// 宽版式阈值（页边距 32 / 大标题交给侧栏页眉）
@@ -22,10 +26,24 @@ nonisolated enum HomeGrid {
         if width >= 900 { 4 } else if width >= wideThreshold { 3 } else { 2 }
     }
 
+    /// 折痕感知列数：division region 激活且列数为奇时减一（下限 2 列），
+    /// 避免中列骑折痕；摊平（region 非激活）不降级，保持内容密度
+    static func skillColumnCount(width: CGFloat, foldDivisionActive: Bool) -> Int {
+        let base = skillColumnCount(width: width)
+        guard foldDivisionActive, base % 2 == 1 else { return base }
+        return max(2, base - 1)
+    }
+
     /// 宽版式：页边距 32，否则 20（设计稿 01/10）
     static func isRegular(width: CGFloat) -> Bool {
         width >= wideThreshold
     }
+}
+
+/// 首页实测几何（onGeometryChange 单通道回灌）：内容宽 + 折痕激活态
+private nonisolated struct HomeGeometry: Equatable, Sendable {
+    var width: CGFloat
+    var foldDivisionActive: Bool
 }
 
 struct HomeView: View {
@@ -38,14 +56,21 @@ struct HomeView: View {
     @State private var loadError: String?
     /// 非 nil 时全屏预览该模版样图（捏合缩放 / 双击复位）
     @State private var previewSkill: SkillCard?
-    /// 实测内容宽度：窗口化下 size class 不再等价于「宽窄」，一律按此分档。
-    /// 首帧为 0 时走紧凑默认（两列），几何下发后再升档
-    @State private var contentWidth: CGFloat = 0
+    /// 实测几何：窗口化下 size class 不再等价于「宽窄」，一律按实测宽度分档；
+    /// 折叠设备半折时 division region（折痕）激活，网格降偶数列避让（HomeGrid 注释）。
+    /// 宽度与折痕查询走同一 onGeometryChange 回调（单通道，避免双桥每帧求值）。
+    /// 首帧宽度为 0 时走紧凑默认（两列），几何下发后再升档
+    @State private var homeGeometry = HomeGeometry(width: 0, foldDivisionActive: false)
+
+    /// 实测内容宽度
+    private var contentWidth: CGFloat { homeGeometry.width }
 
     /// 宽版式（iPad 全屏/宽窗口）：页边距 32、大标题在侧栏
     private var isRegular: Bool { HomeGrid.isRegular(width: contentWidth) }
 
-    private var skillColumnCount: Int { HomeGrid.skillColumnCount(width: contentWidth) }
+    private var skillColumnCount: Int {
+        HomeGrid.skillColumnCount(width: homeGeometry.width, foldDivisionActive: homeGeometry.foldDivisionActive)
+    }
 
     /// 宽网格（三列及以上）：卡片改用紧凑字号与更方的样图盒
     private var isWideGrid: Bool { skillColumnCount >= 3 }
@@ -76,7 +101,12 @@ struct HomeView: View {
             .padding(.bottom, 24)
         }
         .background(Theme.background)
-        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { contentWidth = $0 }
+        .onGeometryChange(for: HomeGeometry.self) { proxy in
+            HomeGeometry(
+                width: proxy.size.width,
+                foldDivisionActive: PlatformCapability.foldDivisionActive(in: proxy)
+            )
+        } action: { homeGeometry = $0 }
         .fullScreenCover(item: $previewSkill) { skill in
             SamplePreviewCover(skill: skill)
         }

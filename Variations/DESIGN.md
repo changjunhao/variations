@@ -272,6 +272,21 @@ iOS 26 起系统 chrome 改用 Liquid Glass。本设计语言是「纸上乐谱�
 - **iPad 多窗口**：`UIApplicationSupportsMultipleScenes = true`；变奏集长按可「在新窗口打开」单号变奏
   （第二个 `WindowGroup(for: PersistentIdentifier.self)`）；谱写中关窗会先二次确认（iOS 27）
 
+### 6.1 iPhone Duo（折叠双屏，iOS 27.1 起）
+
+双屏不是两类布局，仍是「实测宽度分档」一套代码：外屏 compact（实测 466pt → 两列），
+内屏 regular×regular（669/951pt → 三/四列），均落在 HomeGrid 既有档位；竖向工具栏/Tab 胶囊
+（外屏右缘与内屏横屏）由系统容器自动获得，视图层不写任何设备判断。
+
+- **折痕避让（grid 是开发者责任区）**：半折书本/桌面姿态 division region 激活时，HomeGrid 奇数列
+  减一（下限 2 列），摊平不降级；查询收口在 `PlatformCapability.foldDivisionActive(in:)`（iOS 27.1 门控），
+  与宽度共用同一 `onGeometryChange` 回调（单通道）。sheets/alerts/菜单由系统位移，滚动内容豁免，均不动
+- **外屏多窗口**：实测外屏 `openWindow` 以全屏独立 Scene 接管显示（非静默失败），菜单项保留；
+  Apple 文档与模拟器行为不一致，**真机复测为发版闸门项**（被拒时再评估 UIKit 场景激活+错误回调）
+- **结果舞台**：内容列限宽 720pt 居中（本节既有规定，Duo 内屏横屏/iPad 宽窗同受益）
+- **走查清单**（Device Hub · iPhone Duo 模拟器）：外屏竖屏 / 内屏竖屏 / 内屏横屏 / 半折书本 ×
+  首页/流程/谱写/结果/变奏集/我的/sheets/全屏预览；重点测折/展过渡中状态连续（上传、谱写、菜单、键盘）
+
 ---
 
 ## 7. 动效规范

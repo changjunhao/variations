@@ -4,7 +4,8 @@
 //
 //  系统能力门控收口。部署目标 18.0，故新外观一律降级可用：
 //  - Liquid Glass 家族（.buttonStyle(.glass)/scrollEdgeEffectStyle/tabBarMinimizeBehavior）自 **iOS 26** 起；
-//  - 弹层放置/工具栏最小化/资源节流自 **iOS 27** 起。
+//  - 弹层放置/工具栏最小化/资源节流自 **iOS 27** 起；
+//  - 折叠屏折痕查询（reservedRegions）自 **iOS 27.1** 起（iPhone Duo，见 DESIGN.md 第 6 节）。
 //  玻璃只上 chrome（TabBar/导航栏/工具栏/弹层/吸底条边缘），纸面卡片保持哑光（见 DESIGN.md 4.6）。
 //  视图层调用此处的语义 modifier，不各自散写 #available。
 //
@@ -21,6 +22,16 @@ enum PlatformCapability {
     /// iOS 27 精修可用（presentationPlacement / toolbarMinimizationBehavior / 资源节流）
     static var sceneRefinements: Bool {
         if #available(iOS 27, *) { true } else { false }
+    }
+
+    /// 折叠设备 division region（折痕）是否激活（半折书本/桌面姿态）。
+    /// 供网格类布局降偶数列避让；iOS 27.1 以下或非折叠设备恒 false。
+    /// 调用点限定在 onGeometryChange/GeometryReader 的 GeometryProxy 作用域内。
+    static func foldDivisionActive(in proxy: GeometryProxy) -> Bool {
+        if #available(iOS 27.1, *) {
+            return proxy.reservedRegions(kind: .division).contains { $0.isActive }
+        }
+        return false
     }
 }
 

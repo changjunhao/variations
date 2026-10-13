@@ -50,4 +50,26 @@ final class HomeGridTests: XCTestCase {
         XCTAssertTrue(HomeGrid.isRegular(width: 1024))
         XCTAssertEqual(HomeGrid.skillColumnCount(width: 1024), 4)
     }
+
+    // MARK: - iPhone Duo 折痕避让
+
+    /// Duo 外屏 466pt（compact）与内屏 669/951pt（regular）落在既有档位区间：
+    /// 摊平态不降级，列数与宽度档位一致
+    func testDuoWidthsUseExistingTiersWhenFlat() {
+        XCTAssertEqual(HomeGrid.skillColumnCount(width: 466, foldDivisionActive: false), 2, "Duo 外屏宽度两列")
+        XCTAssertEqual(HomeGrid.skillColumnCount(width: 669, foldDivisionActive: false), 3, "Duo 内屏竖屏三列")
+        XCTAssertEqual(HomeGrid.skillColumnCount(width: 951, foldDivisionActive: false), 4, "Duo 内屏横屏四列")
+    }
+
+    /// 半折书本姿态（division region 激活）：奇数列减一，中列不骑折痕
+    func testFoldDivisionDropsOddColumnCount() {
+        XCTAssertEqual(HomeGrid.skillColumnCount(width: 669, foldDivisionActive: true), 2, "半折 669pt 三列降两列")
+        XCTAssertEqual(HomeGrid.skillColumnCount(width: 599, foldDivisionActive: true), 2, "两列已为偶数，保持")
+    }
+
+    /// 折痕激活不影响偶数高档，且减列下限为 2
+    func testFoldDivisionKeepsEvenCountAndFloor() {
+        XCTAssertEqual(HomeGrid.skillColumnCount(width: 951, foldDivisionActive: true), 4, "四列已为偶数，保持")
+        XCTAssertGreaterThanOrEqual(HomeGrid.skillColumnCount(width: 0, foldDivisionActive: true), 2, "列数下限 2")
+    }
 }

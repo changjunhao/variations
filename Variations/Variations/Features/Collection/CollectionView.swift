@@ -14,7 +14,11 @@ struct CollectionView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \VariationRecord.no, order: .reverse) private var records: [VariationRecord]
 
-    /// iPad 多窗口可用时，长按菜单多一项「在新窗口打开」
+    /// iPad 多窗口可用时，长按菜单多一项「在新窗口打开」。
+    /// iPhone Duo 实测（27.1 模拟器，2026-10-12）：外屏（折叠态）该值亦为 true，
+    /// openWindow 在外屏以全屏独立 Scene 接管显示（无返回键/无 Tab 胶囊，同 RecordWindow
+    /// 语义），非 Apple 文档暗示的静默失败；文档与模拟器行为不一致，真机（10-23 发售）
+    /// 复测为发布闸门项——若届时表现为拒绝创建，再评估 UIKit 场景激活+错误回调路径。
     @Environment(\.supportsMultipleWindows) private var supportsMultipleWindows
     @Environment(\.openWindow) private var openWindow
 
